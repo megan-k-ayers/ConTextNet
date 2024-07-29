@@ -1,9 +1,11 @@
 #' Check outcome column
 #'
+#' @param x The input data frame
+#'
 #' @return A logical flag indicating if format check passed (TRUE)
 #'
 #' @examples
-check_y <- function() {
+check_y <- function(x) {
   return(1)
 }
 

@@ -2,10 +2,16 @@
 % Please edit documentation in R/prep_data.R
 \name{create_model_dir}
 \alias{create_model_dir}
-\title{Create directory for model files}
+\title{Create new directory for model files}
 \usage{
-create_model_dir()
+create_model_dir(name)
+}
+\arguments{
+\item{name}{Name to give the directory for this model}
+}
+\value{
+The location of the directory created
 }
 \description{
-Create directory for model files
+This directory will contain the following subdirectories
 }

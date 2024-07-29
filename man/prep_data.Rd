@@ -4,7 +4,47 @@
 \alias{prep_data}
 \title{Prepare data for ConTextNet model}
 \usage{
-prep_data()
+prep_data(
+  x,
+  y_name,
+  text_name,
+  n_tokens,
+  grid_vals,
+  task,
+  token_method,
+  token_instr,
+  embed_method,
+  embed_instr,
+  tune_method = "local"
+)
+}
+\arguments{
+\item{x}{The input data as a data frame}
+
+\item{y_name}{The name of the outcome column \code{x}}
+
+\item{text_name}{The name of the text column in \code{x}}
+
+\item{n_tokens}{Number of tokens to consider in column \code{text_name}}
+
+\item{grid_vals}{List defining the parameter values to consider during tuning}
+
+\item{task}{Whether this is "reg" (regression) or "class" (classification)}
+
+\item{token_method}{How tokenizing should be performed ("file" for embeddings
+read from a file, "name" for Hugging Face model referenced by name)}
+
+\item{token_instr}{Either the relative file name to read tokens from, or
+the name of the Hugging Face model to use}
+
+\item{embed_method}{How embedding should be performed ("file" for embeddings
+read from a file, "name" for Hugging Face model referenced by name)}
+
+\item{embed_instr}{Either the relative file name to read embeddings from, or
+the name of the Hugging Face model to use}
+
+\item{tune_method}{How tuning should be performed: locally, via a Cluster
+with Slurm, or generically via a shell script.}
 }
 \description{
 Prepare data for ConTextNet model

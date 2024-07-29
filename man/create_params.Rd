@@ -2,10 +2,10 @@
 % Please edit documentation in R/prep_data.R
 \name{create_params}
 \alias{create_params}
-\title{Crete a file to store model parameters (meta-params?)}
+\title{Create a list to store model parameters (meta-params and final model params)}
 \usage{
 create_params()
 }
 \description{
-Crete a file to store model parameters (meta-params?)
+Create a list to store model parameters (meta-params and final model params)
 }

@@ -4,7 +4,10 @@
 \alias{check_y}
 \title{Check outcome column}
 \usage{
-check_y()
+check_y(x)
+}
+\arguments{
+\item{x}{The input data frame}
 }
 \value{
 A logical flag indicating if format check passed (TRUE)
