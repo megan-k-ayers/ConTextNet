@@ -43,3 +43,6 @@ and \code{token_map}). Order is assumed to match between \code{x} and the token
 data in \code{file_name}.
 }
 }
+\examples{
+\dontrun{res <- tokenize(imdb, max_length = 200)}
+}

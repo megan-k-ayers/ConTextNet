@@ -23,24 +23,30 @@
 #'         (`tokens`) and a list with the tokenizer vocabulary (`vocab`).
 #'
 #' @examples
+#' \dontrun{res <- tokenize(imdb, max_length = 200)}
 tokenize <- function(x, tokenizer = NULL, max_length = NULL, file_name = NULL,
                      token_map = NULL) {
   ### TODO: This downloads files to the user's library -- this should be made
   ### clear.
   ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
-  model_name <- if (is.null(tokenizer)) "bert-base-uncased" else model_name
+  ### TODO: Is this the best place to use reticulate? Should this be in a setup
+  ### script that saves it as a global variable?
+  model_name <- if (is.null(tokenizer)) "bert-base-uncased" else tokenizer
   if (is.null(file_name)) {
     if (is.null(max_length)) {
       stop("The variable max_length must be specified to perform tokenization.")
     }
+    # Fast tokenizers often throw excessive parallelization warnings, so opting
+    # not to use them for now.
     xfmr <- reticulate::import("transformers")
-    tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name)
+    tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE)
     tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
                     max_length = as.integer(max_length), return_tensors = "pt")
     vocab <- tknzr$get_vocab()
   } else {
     stop("This functionality still needs to be developed.")
-    ### A potentially difficult aspect will be making sure the input matrix
+
+    ### A potentially difficult part will be making sure the input matrix
     ### gets turned into a tensor with the proper format.
   }
 
