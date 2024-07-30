@@ -4,13 +4,42 @@
 \alias{tokenize}
 \title{Tokenize input text}
 \usage{
-tokenize(x, tokenizer)
+tokenize(
+  x,
+  tokenizer = NULL,
+  max_length = NULL,
+  file_name = NULL,
+  token_map = NULL
+)
 }
 \arguments{
-\item{x}{A character vector}
+\item{x}{A data frame with a \code{text} column.}
 
-\item{tokenizer}{A tokenizer model from the Hugging Face transformer library.}
+\item{tokenizer}{A tokenizer model name from the Hugging Face transformer
+library.}
+
+\item{max_length}{Max number of tokens to consider per text sample. Longer
+texts with tokens will be cut off beyond this threshold. Shorter
+values of \code{max_length} correspond to a faster model.}
+
+\item{file_name}{Path to the file with tokenized text.}
+
+\item{token_map}{Path to the file with the tokenizer vocabulary list (list
+names should be sub-words, values should be tokens).}
+}
+\value{
+A list containing: a matrix with tokens corresponding to \code{x$text},
+(\code{tokens}) and a list with the tokenizer vocabulary (\code{vocab}).
 }
 \description{
-Tokenize input text
+Input text is converted to tokens. This can be performed with one of the
+following methods:
+\enumerate{
+\item A default BERT sub-word tokenizer (requires input for \code{max_length})
+\item Chosen tokenizer model name from the Hugging Face transformer library
+(requires input for \code{tokenizer} and \code{max_length})
+\item Existing tokens uploaded from a file (requires inputs for \code{file_name}
+and \code{token_map}). Order is assumed to match between \code{x} and the token
+data in \code{file_name}.
+}
 }

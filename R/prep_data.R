@@ -74,6 +74,8 @@ prep_data <- function(x, y_name, text_name, n_tokens, grid_vals, task,
 
   ### Write token map (stays local)
 
+  ### Train/test split
+
   ### Create parameter grid (unless grid_vals is list of vectors of length 1)
 
   ### Create params list
@@ -92,6 +94,6 @@ prep_data <- function(x, y_name, text_name, n_tokens, grid_vals, task,
 
   ### See if you can zip up the input list and the cluster scripts?
 
-  return(input)
+  return()
 
 }

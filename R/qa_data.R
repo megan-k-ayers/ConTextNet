@@ -6,7 +6,8 @@
 #'
 #' @examples
 check_y <- function(x) {
-  return(1)
+  exists <- "y" %in% names(x)
+  return(exists)
 }
 
 #' Check text column
