@@ -43,19 +43,20 @@ create_grid <- function() {
 #' @param grid_vals List defining the parameter values to consider during
 #'        tuning.
 #' @param task Whether this is "reg" (regression) or "class" (classification).
-#' @param token_method How tokenizing should be performed ("file" for embeddings
-#'        read from a file, "name" for Hugging Face model referenced by name,
-#'        "default" for default BERT sub-word tokenization).
-#' @param max_length Max number of tokens to consider per text sample. Longer
-#'        texts with tokens will be cut off beyond this threshold. Shorter
-#'        values of `max_length` correspond to a faster model.
-#' @param token_instr Either a list with (1) the relative file name to read
-#'        tokens from and (2) the relative file name to read the vocabulary
-#'        list from, or the name of the Hugging Face model to use.
-#' @param embed_method How embedding should be performed ("file" for embeddings
-#'        read from a file, "name" for Hugging Face model referenced by name).
-#' @param embed_instr Either the relative file name to read embeddings from, or
-#'        the name of the Hugging Face model to use.
+#' @param test_prop Proportion of `nrow(x)` to reserve in the test set.
+#' @param embed_method How embedding should be performed ("file" to read from
+#'        files, "name" for Hugging Face model referenced by name, or "default"
+#'        for a default BERT model).
+#' @param embed_instr Depending on choice for embed_method, a list containing
+#'        The "file" method: the file path to read tokens from, the file path to
+#'        read the token vocabulary list from, and the file path to read the
+#'        token embeddings from (named "token_path", "vocab_path", and
+#'        "embed_path")
+#'        The "name" method: the name of the Hugging Face model to use and the
+#'        max number of tokens to consider per text sample (named "name" and
+#'        "max_length")
+#'        The "default" method: the max number of tokens to consider per text
+#'        sample (named "max_length")
 #' @param tune_method How tuning should be performed: locally, via a Cluster
 #'        with Slurm, or generically via a shell script.
 #'
@@ -65,12 +66,14 @@ create_grid <- function() {
 #' @examples
 #' \dontrun{
 #' res <- prep_data(imdb, "y", "text", list(), "class")
-#' res <- prep_data(imdb, "y", "text", list(), "class", token_method = "name",
-#'                  token_instr = "bert-base-cased")}
-prep_data <- function(x, y_name, text_name, grid_vals, task,
-                      token_method = "default", max_length = 200,
-                      token_instr = NULL, embed_method = "default",
-                      embed_instr = NULL, tune_method = "local") {
+#' res <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
+#'                  embed_instr = list("name" = "bert-base-cased",
+#'                                     "max_length" = 200))
+#' }
+prep_data <- function(x, y_name, text_name, grid_vals, task, test_prop = 0.2,
+                      embed_method = "default",
+                      embed_instr = list("max_length" = 200),
+                      tune_method = "local") {
 
   ### Create directory for model files
 
@@ -81,13 +84,14 @@ prep_data <- function(x, y_name, text_name, grid_vals, task,
   ### Unique IDs to samples
 
   ### Tokenize the text, maintain unique IDs?
-  if (token_method == "default") {
-    token_res <- tokenize(x, max_length = max_length)
-  } else if (token_method == "file") {
-    token_res <- tokenize(x, file_name = token_instr[[1]],
-                                      token_map = token_instr[[2]])
-  } else if (token_method == "name") {
-    token_res <- tokenize(x, tokenizer = token_instr, max_length = max_length)
+  if (embed_method == "default") {
+    token_res <- tokenize(x, max_length = embed_instr$max_length)
+  } else if (embed_method == "file") {
+    token_res <- tokenize(x, token_path = embed_instr$token_path,
+                          vocab_path = embed_instr$vocab_path)
+  } else if (embed_method == "name") {
+    token_res <- tokenize(x, tokenizer = embed_instr$name,
+                          max_length = embed_instr$max_length)
   } else {
     stop("Please input a valid option for token_method.")
   }
@@ -96,10 +100,13 @@ prep_data <- function(x, y_name, text_name, grid_vals, task,
   ### Write token map (stays local)
 
   ### Train/test split
+  ### TODO: Non-invasive set.seed here. And make it exact to test_prop.
+  x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
+                   prob = c(1 - test_prop, test_prop))
 
   ### Create parameter grid (unless grid_vals is list of vectors of length 1)
 
-  ### Create params list
+  ### Create params list (meta-params needed for modeling)
 
   ### Write shell script(s), whatever will be needed for running on the cluster,
   ### unless choosing to run locally.

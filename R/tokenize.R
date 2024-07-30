@@ -15,8 +15,8 @@
 #' @param max_length Max number of tokens to consider per text sample. Longer
 #'        texts with tokens will be cut off beyond this threshold. Shorter
 #'        values of `max_length` correspond to a faster model.
-#' @param file_name Path to the file with tokenized text.
-#' @param token_map Path to the file with the tokenizer vocabulary list (list
+#' @param token_path Path to the file with tokenized text.
+#' @param vocab_path Path to the file with the tokenizer vocabulary list (list
 #'        names should be sub-words, values should be tokens).
 #'
 #' @return A list containing: a matrix with tokens corresponding to `x$text`,
@@ -24,17 +24,19 @@
 #'
 #' @examples
 #' \dontrun{res <- tokenize(imdb, max_length = 200)}
-tokenize <- function(x, tokenizer = NULL, max_length = NULL, file_name = NULL,
-                     token_map = NULL) {
+tokenize <- function(x, tokenizer = NULL, max_length = NULL, token_path = NULL,
+                     vocab_path = NULL) {
   ### TODO: This downloads files to the user's library -- this should be made
   ### clear.
   ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
   ### TODO: Is this the best place to use reticulate? Should this be in a setup
   ### script that saves it as a global variable?
-  model_name <- if (is.null(tokenizer)) "bert-base-uncased" else tokenizer
-  if (is.null(file_name)) {
-    if (is.null(max_length)) {
-      stop("The variable max_length must be specified to perform tokenization.")
+  ### TODO: Include default tokenizer/embedding model as a saved file rather
+  ### than pulling it from Hugging Face.
+  model_name <- if (is.null(tokenizer)) "prajjwal1/bert-tiny" else tokenizer
+  if (is.null(token_path)) {
+    if (!methods::is(max_length, "numeric") | length(max_length) != 1) {
+      stop("The variable max_length must be specified as an integer.")
     }
     # Fast tokenizers often throw excessive parallelization warnings, so opting
     # not to use them for now.

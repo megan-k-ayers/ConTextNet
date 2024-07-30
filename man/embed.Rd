@@ -4,8 +4,23 @@
 \alias{embed}
 \title{Get embeddings of texts}
 \usage{
-embed()
+embed(input_list)
+}
+\arguments{
+\item{input_list}{This should be an output of prep_data().}
 }
 \description{
 Get embeddings of texts
+}
+\examples{
+\dontrun{
+input_list <- prep_data(imdb, "y", "text", list(), "class")
+res <- embed(input_list)}
+
+\dontrun{
+input_list <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
+                 embed_instr = list("name" = "bert-base-cased",
+                                    "max_length" = 200))
+res <- embed(input_list)}
+
 }

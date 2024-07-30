@@ -8,8 +8,8 @@ tokenize(
   x,
   tokenizer = NULL,
   max_length = NULL,
-  file_name = NULL,
-  token_map = NULL
+  token_path = NULL,
+  vocab_path = NULL
 )
 }
 \arguments{
@@ -22,9 +22,9 @@ library.}
 texts with tokens will be cut off beyond this threshold. Shorter
 values of \code{max_length} correspond to a faster model.}
 
-\item{file_name}{Path to the file with tokenized text.}
+\item{token_path}{Path to the file with tokenized text.}
 
-\item{token_map}{Path to the file with the tokenizer vocabulary list (list
+\item{vocab_path}{Path to the file with the tokenizer vocabulary list (list
 names should be sub-words, values should be tokens).}
 }
 \value{

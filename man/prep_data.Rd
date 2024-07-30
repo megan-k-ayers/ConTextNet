@@ -10,11 +10,9 @@ prep_data(
   text_name,
   grid_vals,
   task,
-  token_method = "default",
-  max_length = 200,
-  token_instr = NULL,
+  test_prop = 0.2,
   embed_method = "default",
-  embed_instr = NULL,
+  embed_instr = list(max_length = 200),
   tune_method = "local"
 )
 }
@@ -30,23 +28,22 @@ tuning.}
 
 \item{task}{Whether this is "reg" (regression) or "class" (classification).}
 
-\item{token_method}{How tokenizing should be performed ("file" for embeddings
-read from a file, "name" for Hugging Face model referenced by name,
-"default" for default BERT sub-word tokenization).}
+\item{test_prop}{Proportion of \code{nrow(x)} to reserve in the test set.}
 
-\item{max_length}{Max number of tokens to consider per text sample. Longer
-texts with tokens will be cut off beyond this threshold. Shorter
-values of \code{max_length} correspond to a faster model.}
+\item{embed_method}{How embedding should be performed ("file" to read from
+files, "name" for Hugging Face model referenced by name, or "default"
+for a default BERT model).}
 
-\item{token_instr}{Either a list with (1) the relative file name to read
-tokens from and (2) the relative file name to read the vocabulary
-list from, or the name of the Hugging Face model to use.}
-
-\item{embed_method}{How embedding should be performed ("file" for embeddings
-read from a file, "name" for Hugging Face model referenced by name).}
-
-\item{embed_instr}{Either the relative file name to read embeddings from, or
-the name of the Hugging Face model to use.}
+\item{embed_instr}{Depending on choice for embed_method, a list containing
+The "file" method: the file path to read tokens from, the file path to
+read the token vocabulary list from, and the file path to read the
+token embeddings from (named "token_path", "vocab_path", and
+"embed_path")
+The "name" method: the name of the Hugging Face model to use and the
+max number of tokens to consider per text sample (named "name" and
+"max_length")
+The "default" method: the max number of tokens to consider per text
+sample (named "max_length")}
 
 \item{tune_method}{How tuning should be performed: locally, via a Cluster
 with Slurm, or generically via a shell script.}
@@ -55,5 +52,10 @@ with Slurm, or generically via a shell script.}
 Prepare data for ConTextNet model
 }
 \examples{
-\dontrun{res <- prep_data(imdb, "y", "text", list())}
+\dontrun{
+res <- prep_data(imdb, "y", "text", list(), "class")
+res <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
+                 embed_instr = list("name" = "bert-base-cased",
+                                    "max_length" = 200))
+}
 }
