@@ -15,3 +15,6 @@ The location of the directory created
 \description{
 This directory will contain the following subdirectories
 }
+\examples{
+\dontrun{create_model_dir("example")}
+}

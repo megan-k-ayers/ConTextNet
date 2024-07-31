@@ -7,6 +7,7 @@
 #' @return The location of the directory created
 #'
 #' @examples
+#' \dontrun{create_model_dir("example")}
 create_model_dir <- function(name) {
 
   ### Check if name exists already
@@ -40,7 +41,7 @@ create_grid <- function() {
 #' @param x The input data as a data frame.
 #' @param y_name The name of the outcome column `x`.
 #' @param text_name The name of the text column in `x`.
-#' @param grid_vals List defining the parameter values to consider during
+#' @param param_vals List defining the parameter values to consider during
 #'        tuning.
 #' @param task Whether this is "reg" (regression) or "class" (classification).
 #' @param test_prop Proportion of `nrow(x)` to reserve in the test set.
@@ -58,22 +59,35 @@ create_grid <- function() {
 #'        The "default" method: the max number of tokens to consider per text
 #'        sample (named "max_length")
 #' @param tune_method How tuning should be performed: locally, via a Cluster
-#'        with Slurm, or generically via a shell script.
+#'        with Slurm, generically via a shell script, or not at all
+#'        ("local", "slurm", "shell", or "none")
+#' @param folder_name Name of directory to create for saving model files.
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' res <- prep_data(imdb, "y", "text", list(), "class")
-#' res <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
+#' param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+#'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
+#'                    "lambda_corr" = list(0), "lambda_out" = list(0),
+#'                    "epochs" = list(20), "batch_size" = list(32),
+#'                    "covars" = list(NULL))
+#' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+#'                  param_vals = param_vals, task = "class",
+#'                  folder_name = "example")
+#'
+#' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+#'                  param_vals = param_vals, task = "class",
+#'                  embed_method = "name",
 #'                  embed_instr = list("name" = "bert-base-cased",
-#'                                     "max_length" = 200))
+#'                                     "max_length" = 200),
+#'                  folder_name = "example")
 #' }
-prep_data <- function(x, y_name, text_name, grid_vals, task, test_prop = 0.2,
+prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
                       embed_method = "default",
                       embed_instr = list("max_length" = 200),
-                      tune_method = "local") {
+                      tune_method = "none", folder_name) {
 
   ### Create directory for model files
 
@@ -96,24 +110,42 @@ prep_data <- function(x, y_name, text_name, grid_vals, task, test_prop = 0.2,
     stop("Please input a valid option for token_method.")
   }
 
-
   ### Write token map (stays local)
 
   ### Train/test split
-  ### TODO: Non-invasive set.seed here. And make it exact to test_prop.
+  ### TODO: Non-invasive set.seed here. And make it exact to test_prop. And
+  ### move to a helper function?
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
 
-  ### Create parameter grid (unless grid_vals is list of vectors of length 1)
+  ### Separate tuned parameters from fixed parameters, prepare for tuning (if
+  ### happening).
+  if (tune_method == "none") {
+    if (!identical(unique(sapply(param_vals, length)), as.integer(1))) {
+      stop("Parameter settings are ill-specified - please review them.")
+    }
+    params <- param_vals
+    params$n_tokens <- embed_instr$max_length
+    params$folder = folder_name
+    params$covars = param_vals$covars
+  } else {
+    params <- list("n_tokens" = embed_instr$max_length,
+                   "folder" = folder_name,
+                   "covars" = param_vals$covars)
 
-  ### Create params list (meta-params needed for modeling)
+    ### Create parameter grid (unless param_vals is list of vectors of length 1)
 
-  ### Write shell script(s), whatever will be needed for running on the cluster,
-  ### unless choosing to run locally.
+
+    ### Write shell script(s), whatever will be needed for running on the cluster,
+    ### unless choosing to run locally.
+
+
+  }
+
 
   ### Build input file with everything necessary for the model
   input <- list(dat = x,
-                params = list(),
+                params = param_vals,
                 tokens = token_res$tokens,
                 vocab = token_res$vocab,
                 embed_method = embed_method,

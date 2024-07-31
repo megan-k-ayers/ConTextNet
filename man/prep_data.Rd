@@ -8,12 +8,12 @@ prep_data(
   x,
   y_name,
   text_name,
-  grid_vals,
+  param_vals,
   task,
   test_prop = 0.2,
   embed_method = "default",
   embed_instr = list(max_length = 200),
-  tune_method = "local"
+  tune_method = "none"
 )
 }
 \arguments{
@@ -23,7 +23,7 @@ prep_data(
 
 \item{text_name}{The name of the text column in \code{x}.}
 
-\item{grid_vals}{List defining the parameter values to consider during
+\item{param_vals}{List defining the parameter values to consider during
 tuning.}
 
 \item{task}{Whether this is "reg" (regression) or "class" (classification).}
@@ -46,13 +46,24 @@ The "default" method: the max number of tokens to consider per text
 sample (named "max_length")}
 
 \item{tune_method}{How tuning should be performed: locally, via a Cluster
-with Slurm, or generically via a shell script.}
+with Slurm, generically via a shell script, or not at all
+("local", "slurm", "shell", or "none")}
 }
 \description{
 Prepare data for ConTextNet model
 }
 \examples{
 \dontrun{
+param_vals <- list("n_filts" = list(2),
+                   "kern_sizes" = list(c(3, 5)),
+                   "lr" = list(0.0001),
+                   "lambda_cnn" = list(0),
+                   "lambda_corr" = list(0),
+                   "lambda_out" = list(0),
+                   "epochs" = list(20),
+                   "batch_size" = list(32),
+                   "folder" = "example",
+                   "covars" = list(NULL))
 res <- prep_data(imdb, "y", "text", list(), "class")
 res <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
                  embed_instr = list("name" = "bert-base-cased",
