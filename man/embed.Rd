@@ -9,18 +9,23 @@ embed(input_list)
 \arguments{
 \item{input_list}{This should be an output of prep_data().}
 }
+\value{
+List, which is \code{input_list} now including the text embeddings, with
+the embedding dimension recorded in \code{input_list$params$embed_dim}.
+}
 \description{
 Get embeddings of texts
 }
 \examples{
 \dontrun{
-input_list <- prep_data(imdb, "y", "text", list(), "class")
-res <- embed(input_list)}
-
-\dontrun{
-input_list <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
-                 embed_instr = list("name" = "bert-base-cased",
-                                    "max_length" = 200))
-res <- embed(input_list)}
-
+param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+                   "lr" = list(0.0001), "lambda_cnn" = list(0),
+                   "lambda_corr" = list(0), "lambda_out" = list(0),
+                   "epochs" = list(20), "batch_size" = list(32),
+                   "covars" = list(NULL))
+input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
+                        param_vals = param_vals, task = "class",
+                        folder_name = "example")
+res <- embed(input_list)
+}
 }

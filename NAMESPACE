@@ -2,5 +2,9 @@
 
 export(check_setup)
 export(initialize)
+export(initialize_model)
 export(prep_data)
 export(qa_data)
+importFrom(dplyr,"%>%")
+importFrom(tensorflow,tf)
+importFrom(tfprobability,tfp)

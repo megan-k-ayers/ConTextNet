@@ -13,7 +13,8 @@ prep_data(
   test_prop = 0.2,
   embed_method = "default",
   embed_instr = list(max_length = 200),
-  tune_method = "none"
+  tune_method = "none",
+  folder_name
 )
 }
 \arguments{
@@ -48,25 +49,28 @@ sample (named "max_length")}
 \item{tune_method}{How tuning should be performed: locally, via a Cluster
 with Slurm, generically via a shell script, or not at all
 ("local", "slurm", "shell", or "none")}
+
+\item{folder_name}{Name of directory to create for saving model files.}
 }
 \description{
 Prepare data for ConTextNet model
 }
 \examples{
 \dontrun{
-param_vals <- list("n_filts" = list(2),
-                   "kern_sizes" = list(c(3, 5)),
-                   "lr" = list(0.0001),
-                   "lambda_cnn" = list(0),
-                   "lambda_corr" = list(0),
-                   "lambda_out" = list(0),
-                   "epochs" = list(20),
-                   "batch_size" = list(32),
-                   "folder" = "example",
+param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+                   "lr" = list(0.0001), "lambda_cnn" = list(0),
+                   "lambda_corr" = list(0), "lambda_out" = list(0),
+                   "epochs" = list(20), "batch_size" = list(32),
                    "covars" = list(NULL))
-res <- prep_data(imdb, "y", "text", list(), "class")
-res <- prep_data(imdb, "y", "text", list(), "class", embed_method = "name",
+res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+                 param_vals = param_vals, task = "class",
+                 folder_name = "example")
+
+res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+                 param_vals = param_vals, task = "class",
+                 embed_method = "name",
                  embed_instr = list("name" = "bert-base-cased",
-                                    "max_length" = 200))
+                                    "max_length" = 200),
+                 folder_name = "example")
 }
 }
