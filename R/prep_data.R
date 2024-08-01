@@ -18,14 +18,41 @@ create_model_dir <- function(name) {
 
 }
 
+
 #' Create a list to store model parameters (meta-params and final model params)
+#'
+#' @param p A list, model_params, passed to prep_data().
+#' @param tune_method How tuning should be performed: locally, via a Cluster
+#'        with Slurm, generically via a shell script, or not at all
+#'        ("local", "slurm", "shell", or "none")
 #'
 #' @return
 #'
 #' @examples
-create_params <- function() {
-  return(1)
+prep_params <- function(p, tune_method) {
+  ### Handle parameters, with different cases for parameter tuning and direct
+  ### specification (tuning = "none").
+  ### TODO: Handling if user tries to specify parameters for tuning using c()
+  ### instead of list(). This assumes ~perfect behavior (user gives sub-lists
+  ### only if parameter tuning or passing single specification, otherwise gives
+  ### specification single directly.
+  list_flag <- any(sapply(p, methods::is, class2 = "list"))
+  if (list_flag) {
+    single_spec_flag <- identical(unique(sapply(p, length)), as.integer(1))
+  } else single_spec_flag <- TRUE
+
+  if (single_spec_flag) {
+    if (list_flag) {  # Case with single specification but sub-lists
+      params <- lapply(p, unlist)
+    } else params <- p  # Case with single specification
+  } else if (tune_method == "none") {  # Case with no tuning but >1 setting
+    stop("Parameter settings are ill-specified - please review them.")
+  } else {  # Case with tuning and >1 setting
+    params <- list()
+  }
+  return(params)
 }
+
 
 #' Build parameter grid for tuning
 #'
@@ -36,12 +63,13 @@ create_grid <- function() {
   return(1)
 }
 
+
 #' Prepare data for ConTextNet model
 #'
 #' @param x The input data as a data frame.
 #' @param y_name The name of the outcome column `x`.
 #' @param text_name The name of the text column in `x`.
-#' @param param_vals List defining the parameter values to consider during
+#' @param model_params List defining the parameter values to consider during
 #'        tuning.
 #' @param task Whether this is "reg" (regression) or "class" (classification).
 #' @param test_prop Proportion of `nrow(x)` to reserve in the test set.
@@ -68,30 +96,30 @@ create_grid <- function() {
 #'
 #' @examples
 #' \dontrun{
-#' param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+#' model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
 #'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
 #'                    "lambda_corr" = list(0), "lambda_out" = list(0),
 #'                    "epochs" = list(20), "batch_size" = list(32),
 #'                    "covars" = list(NULL))
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
-#'                  param_vals = param_vals, task = "class",
+#'                  model_params = model_params, task = "class",
 #'                  folder_name = "example")
 #'
-# param_vals <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
-#                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
-#                    "epochs" = 20, "batch_size" = 32, "covars" = NULL)
-# res <- prep_data(x = imdb, y_name = "y", text_name = "text",
-#                  param_vals = param_vals, task = "class",
-#                  folder_name = "example")
+#' model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
+#'                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
+#'                    "epochs" = 20, "batch_size" = 32, "covars" = NULL)
+#' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+#'                  model_params = model_params, task = "class",
+#'                  folder_name = "example")
 #'
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
-#'                  param_vals = param_vals, task = "class",
+#'                  model_params = model_params, task = "class",
 #'                  embed_method = "name",
 #'                  embed_instr = list("name" = "bert-base-cased",
 #'                                     "max_length" = 200),
 #'                  folder_name = "example")
 #' }
-prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
+prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
                       embed_method = "default",
                       embed_instr = list("max_length" = 200),
                       tune_method = "none", folder_name) {
@@ -105,17 +133,8 @@ prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
   ### Unique IDs to samples
 
   ### Tokenize the text, maintain unique IDs?
-  if (embed_method == "default") {
-    token_res <- tokenize(x, max_length = embed_instr$max_length)
-  } else if (embed_method == "file") {
-    token_res <- tokenize(x, token_path = embed_instr$token_path,
-                          vocab_path = embed_instr$vocab_path)
-  } else if (embed_method == "name") {
-    token_res <- tokenize(x, tokenizer = embed_instr$name,
-                          max_length = embed_instr$max_length)
-  } else {
-    stop("Please input a valid option for token_method.")
-  }
+  token_res <- tokenize(x, embed_method = embed_method,
+                        embed_instr = embed_instr)
 
   ### Write token map (stays local)
 
@@ -125,42 +144,18 @@ prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
 
-  ### Handle parameters, with different cases for parameter tuning and direct
-  ### specification (tuning = "none").
-  ### TODO: Handling if user tries to specify parameters for tuning using c()
-  ### instead of list(). This assumes ~perfect behavior (user gives sublists
-  ### only if parameter tuning or passing single specification, otherwise gives
-  ### specification single directly.
-  list_flag <- any(sapply(param_vals, methods::is, class2 = "list"))
-  if (list_flag) {
-    single_spec_flag <- identical(unique(sapply(param_vals, length)),
-                                  as.integer(1))
-  } else single_spec_flag <- TRUE
+  ### Prep formatting of meta-params (which include model params if only a
+  ### single model is being run).
+  params <- prep_params(model_params, tune_method)
+  params$n_tokens <- embed_instr$max_length
+  params$folder <- folder_name
+  params$task <- task
 
-  if (single_spec_flag) {
-    if (list_flag) {  # Case with single specification but sublists
-      params <- lapply(param_vals, unlist)
-    } else params <- param_vals  # Case with single specification
-    params$n_tokens <- embed_instr$max_length
-    params$folder <- folder_name
-    params$task <- task
-  } else if (tune_method == "none") {  # Case with no tuning but >1 setting
-    stop("Parameter settings are ill-specified - please review them.")
-  } else {  # Case with tuning and >1 setting
-    params <- param_vals
-    params <- list("n_tokens" = embed_instr$max_length,
-                   "folder" = folder_name,
-                   "covars" = param_vals$covars,
-                   "task" = task)
-
-    ### Create parameter grid (unless param_vals is list of vectors of length 1)
+  ### Create parameter grid (unless param_vals is list of vectors of length 1)
 
 
-    ### Write shell script(s), whatever will be needed for running on the cluster,
-    ### unless choosing to run locally.
-
-
-  }
+  ### Write shell script(s), whatever will be needed for running on the cluster,
+  ### unless choosing to run locally.
 
 
   ### Build input file with everything necessary for the model

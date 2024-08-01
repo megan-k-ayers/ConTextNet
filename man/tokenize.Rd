@@ -4,28 +4,25 @@
 \alias{tokenize}
 \title{Tokenize input text}
 \usage{
-tokenize(
-  x,
-  tokenizer = NULL,
-  max_length = NULL,
-  token_path = NULL,
-  vocab_path = NULL
-)
+tokenize(x, embed_method = "default", embed_instr = list(max_length = 200))
 }
 \arguments{
 \item{x}{A data frame with a \code{text} column.}
 
-\item{tokenizer}{A tokenizer model name from the Hugging Face transformer
-library.}
+\item{embed_method}{How embedding should be performed ("file" to read from
+files, "name" for Hugging Face model referenced by name, or "default"
+for a default BERT model).}
 
-\item{max_length}{Max number of tokens to consider per text sample. Longer
-texts with tokens will be cut off beyond this threshold. Shorter
-values of \code{max_length} correspond to a faster model.}
-
-\item{token_path}{Path to the file with tokenized text.}
-
-\item{vocab_path}{Path to the file with the tokenizer vocabulary list (list
-names should be sub-words, values should be tokens).}
+\item{embed_instr}{Depending on choice for embed_method, a list containing
+The "file" method: the file path to read tokens from, the file path to
+read the token vocabulary list from, and the file path to read the
+token embeddings from (named "token_path", "vocab_path", and
+"embed_path")
+The "name" method: the name of the Hugging Face model to use and the
+max number of tokens to consider per text sample (named "name" and
+"max_length")
+The "default" method: the max number of tokens to consider per text
+sample (named "max_length")}
 }
 \value{
 A list containing: a matrix with tokens corresponding to \code{x$text},

@@ -10,22 +10,27 @@
 #'     data in `file_name`.
 #'
 #' @param x A data frame with a `text` column.
-#' @param tokenizer A tokenizer model name from the Hugging Face transformer
-#'        library.
-#' @param max_length Max number of tokens to consider per text sample. Longer
-#'        texts with tokens will be cut off beyond this threshold. Shorter
-#'        values of `max_length` correspond to a faster model.
-#' @param token_path Path to the file with tokenized text.
-#' @param vocab_path Path to the file with the tokenizer vocabulary list (list
-#'        names should be sub-words, values should be tokens).
+#' @param embed_method How embedding should be performed ("file" to read from
+#'        files, "name" for Hugging Face model referenced by name, or "default"
+#'        for a default BERT model).
+#' @param embed_instr Depending on choice for embed_method, a list containing
+#'        The "file" method: the file path to read tokens from, the file path to
+#'        read the token vocabulary list from, and the file path to read the
+#'        token embeddings from (named "token_path", "vocab_path", and
+#'        "embed_path")
+#'        The "name" method: the name of the Hugging Face model to use and the
+#'        max number of tokens to consider per text sample (named "name" and
+#'        "max_length")
+#'        The "default" method: the max number of tokens to consider per text
+#'        sample (named "max_length")
 #'
 #' @return A list containing: a matrix with tokens corresponding to `x$text`,
 #'         (`tokens`) and a list with the tokenizer vocabulary (`vocab`).
 #'
 #' @examples
-#' \dontrun{res <- tokenize(imdb, max_length = 200)}
-tokenize <- function(x, tokenizer = NULL, max_length = NULL, token_path = NULL,
-                     vocab_path = NULL) {
+#' \dontrun{res <- tokenize(imdb)}
+tokenize <- function(x, embed_method = "default",
+                     embed_instr = list("max_length" = 200)) {
   ### TODO: This downloads files to the user's library -- this should be made
   ### clear.
   ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
@@ -33,24 +38,31 @@ tokenize <- function(x, tokenizer = NULL, max_length = NULL, token_path = NULL,
   ### script that saves it as a global variable?
   ### TODO: Include default tokenizer/embedding model as a saved file rather
   ### than pulling it from Hugging Face.
-  model_name <- if (is.null(tokenizer)) "prajjwal1/bert-tiny" else tokenizer
-  if (is.null(token_path)) {
-    if (!methods::is(max_length, "numeric") | length(max_length) != 1) {
-      stop("The variable max_length must be specified as an integer.")
-    }
-    # Fast tokenizers often throw excessive parallelization warnings, so opting
-    # not to use them for now.
-    xfmr <- reticulate::import("transformers")
-    tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE)
-    tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
-                    max_length = as.integer(max_length), return_tensors = "pt")
-    vocab <- tknzr$get_vocab()
-  } else {
+
+  if (embed_method == "file") {
     stop("This functionality still needs to be developed.")
 
     ### A potentially difficult part will be making sure the input matrix
     ### gets turned into a tensor with the proper format.
+    return(1)
+  } else if (embed_method == "default") {
+    model_name <- "prajjwal1/bert-tiny"
+  } else if (embed_method == "name") {
+    model_name <- embed_instr$name
+  } else stop("Please input a valid option for token_method.")
+
+  max_length <- embed_instr$max_length
+  if (!methods::is(max_length, "numeric") | length(max_length) != 1) {
+    stop("max_length must be specified as an integer in embed_instr.")
   }
+
+  # Fast tokenizers often throw excessive parallelization warnings, so opting
+  # not to use them for now.
+  xfmr <- reticulate::import("transformers")
+  tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE)
+  tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
+                  max_length = as.integer(max_length), return_tensors = "pt")
+  vocab <- tknzr$get_vocab()
 
   return(list("tokens" = tokens, "vocab" = vocab))
 }

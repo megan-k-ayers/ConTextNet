@@ -7,13 +7,13 @@
 #'
 #' @examples
 #' \dontrun{
-#' param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
-#'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
-#'                    "lambda_corr" = list(0), "lambda_out" = list(0),
-#'                    "epochs" = list(20), "batch_size" = list(32),
-#'                    "covars" = list(NULL))
+#' model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+#'                      "lr" = list(0.0001), "lambda_cnn" = list(0),
+#'                      "lambda_corr" = list(0), "lambda_out" = list(0),
+#'                      "epochs" = list(20), "batch_size" = list(32),
+#'                      "covars" = list(NULL))
 #' input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
-#'                         param_vals = param_vals, task = "class",
+#'                         model_params = model_params, task = "class",
 #'                         folder_name = "example")
 #' res <- embed(input_list)
 #' }

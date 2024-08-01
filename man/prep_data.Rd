@@ -8,7 +8,7 @@ prep_data(
   x,
   y_name,
   text_name,
-  param_vals,
+  model_params,
   task,
   test_prop = 0.2,
   embed_method = "default",
@@ -24,7 +24,7 @@ prep_data(
 
 \item{text_name}{The name of the text column in \code{x}.}
 
-\item{param_vals}{List defining the parameter values to consider during
+\item{model_params}{List defining the parameter values to consider during
 tuning.}
 
 \item{task}{Whether this is "reg" (regression) or "class" (classification).}
@@ -57,18 +57,24 @@ Prepare data for ConTextNet model
 }
 \examples{
 \dontrun{
-param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
                    "lr" = list(0.0001), "lambda_cnn" = list(0),
                    "lambda_corr" = list(0), "lambda_out" = list(0),
                    "epochs" = list(20), "batch_size" = list(32),
                    "covars" = list(NULL))
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
-                 param_vals = param_vals, task = "class",
+                 model_params = model_params, task = "class",
                  folder_name = "example")
 
+model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
+                   "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
+                   "epochs" = 20, "batch_size" = 32, "covars" = NULL)
+res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+                 model_params = model_params, task = "class",
+                 folder_name = "example")
 
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
-                 param_vals = param_vals, task = "class",
+                 model_params = model_params, task = "class",
                  embed_method = "name",
                  embed_instr = list("name" = "bert-base-cased",
                                     "max_length" = 200),
