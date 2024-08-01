@@ -66,6 +66,7 @@ res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  param_vals = param_vals, task = "class",
                  folder_name = "example")
 
+
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  param_vals = param_vals, task = "class",
                  embed_method = "name",

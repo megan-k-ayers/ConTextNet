@@ -9,14 +9,10 @@ corr_regularizer <- function(weight, params) {
 
     corrs <- tfp$stats$correlation(w)
     corrs <- tf$subtract(corrs,  # Remove diagonal correlations of 1
-                         diag(1, nrow = params$num_filters))
+                         diag(1, nrow = params$n_filts))
     corrs <- tf$maximum(corrs, 0)  # Set negative correlations to 0
 
-    if (params$corr_reg_fun == "max") {
-      penalty <- tf$reduce_max(corrs)
-    } else if (params$corr_reg_fun == "pos_sum") {
-      penalty <- tf$reduce_sum(corrs)
-    }
+    penalty <- tf$reduce_max(corrs)  # Take max correlation as penalty
 
     return(weight * penalty)
 
@@ -33,89 +29,89 @@ corr_regularizer <- function(weight, params) {
 #' @export
 #'
 #' @examples
-initialize_model <- function(params) {
+#' \dontrun{
+#' param_vals <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
+#'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
+#'                    "lambda_corr" = list(0), "lambda_out" = list(0),
+#'                    "epochs" = list(20), "batch_size" = list(32),
+#'                    "covars" = list(NULL))
+#' input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
+#'                         param_vals = param_vals, task = "class",
+#'                         folder_name = "example")
+#' res <- embed(input_list)
+#' init_model(res$params)
+#' }
+init_model <- function(params) {
 
   ### TODO: Clean up code - will piping things more help with long lines?
 
-  ### TODO: Basically copy-and-pasted from project code -- needs to be tested
-  ### extensively (ex. param items renamed)
-
-  ### Input layer and covariate layer (if given).
+  ### Create input layer.
   input_layer <- keras::layer_input(shape = list(params$n_tokens,
                                                  params$embed_dim),
                                     name = "input")
 
+  ### Create covariate layer and concatenate training inputs (if needed).
   if (!is.null(params$covars)) {
     input_covars_layer <- keras::layer_input(shape = length(params$covars),
                                              name = "covars")
-  }
-
-  if (!is.null(params$covars)) {
     train_input <- list(input_layer, input_covars_layer)
   } else {
     train_input <- input_layer
   }
 
-
-  ### 1D CNN layers and corresponding max pooled layers - one per kernel_size
+  ### 1D CNN layers and corresponding max pooled layers - one per kern_sizes
   ### given in params.
-  conv_layers <- vector("list", length(params$kernel_sizes))
-  names(conv_layers) <- params$kernel_sizes
-  for (size in params$kernel_sizes) {
+  conv_layers <- vector("list", length(params$kern_sizes))
+  names(conv_layers) <- params$kern_sizes
+  for (size in params$kern_sizes) {
 
     kernel_reg <- keras::regularizer_l2(params$lambda_cnn)
-    activity_reg <- corr_regularizer(params$corr_reg_weight)
-    name <- paste0("max_pool_", size)
+    activity_reg <- corr_regularizer(params$lambda_corr, params)
 
-    conv1d_layer <- keras::layer_conv_1d(filters = params$num_filters,
+    cnn_name <- paste0("conv1d_", size)
+    mp_name <- paste0("max_pool_", size)
+    conv1d_layer <- keras::layer_conv_1d(filters = params$n_filts,
                                          kernel_size = size,
                                          activation = "sigmoid",
                                          kernel_regularizer = kernel_reg,
                                          activity_regularizer = activity_reg,
-                                         name = paste0("conv1d_", size))(input_layer)
-    pooling_layer <- keras::layer_global_max_pooling_1d(name = name)(conv1d_layer)
+                                         name = cnn_name)(input_layer)
+    pooling_layer <- keras::layer_global_max_pooling_1d(name = mp_name)(conv1d_layer)
     conv_layers[[as.character(size)]] <- pooling_layer
 
   }
-
 
   ### Concatenate max pooled layers from multiple CNN layers together with
   ### covariates, if given.
   if (!is.null(params$covars)) {
     conv_layers <- c(conv_layers, input_covars_layer)
     concat_cnns <- tf$keras$layers$Concatenate()(unname(conv_layers))
-  } else if (length(params$kernel_sizes) > 1) {
+  } else if (length(params$kern_sizes) > 1) {
     concat_cnns <- tf$keras$layers$Concatenate()(unname(conv_layers))
   } else {
     concat_cnns <- conv_layers[[1]]
   }
 
-
-  if (is.null(params$outcome_type)) {
+  ### Define loss and activation functions.
+  if (params$task == "class") {
     loss_type <- "binary_crossentropy"
-    params$outcome_activation <- "sigmoid"
-    # activation <- "sigmoid"
-  } else if (params$outcome_type == "binary") {
-    loss_type <- "binary_crossentropy"
-    # activation <- "sigmoid"
-  } else if (params$outcome_type == "continuous") {
+    out_act <- "sigmoid"
+  } else if (params$task == "reg") {
     loss_type <- "mse"
-    # activation <- "linear"
+    out_act <- "linear"
   }
 
   ### Final dense layer.
   out_reg <- keras::regularizer_l1(params$lambda_out)
   output_layer <- keras::layer_dense(units = 1,
-                                     activation = params$outcome_activation,
+                                     activation = out_act,
                                      kernel_regularizer = out_reg,
                                      name = "output")(concat_cnns)
 
-
   ### Create and compile model.
-  lr <- if (is.null(params$lr)) 0.001 else params$lr
   model <- keras::keras_model(inputs = train_input,
                               outputs = output_layer)
-  model %>% keras::compile(optimizer = tf$keras$optimizers$legacy$Adam(learning_rate = lr),
+  model %>% keras::compile(optimizer = tf$keras$optimizers$legacy$Adam(learning_rate = params$lr),
                            loss = loss_type,
                            metrics = "mean_absolute_error")
 

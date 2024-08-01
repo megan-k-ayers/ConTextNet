@@ -77,6 +77,13 @@ create_grid <- function() {
 #'                  param_vals = param_vals, task = "class",
 #'                  folder_name = "example")
 #'
+# param_vals <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
+#                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
+#                    "epochs" = 20, "batch_size" = 32, "covars" = NULL)
+# res <- prep_data(x = imdb, y_name = "y", text_name = "text",
+#                  param_vals = param_vals, task = "class",
+#                  folder_name = "example")
+#'
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
 #'                  param_vals = param_vals, task = "class",
 #'                  embed_method = "name",
@@ -118,20 +125,33 @@ prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
 
-  ### Separate tuned parameters from fixed parameters, prepare for tuning (if
-  ### happening).
-  if (tune_method == "none") {
-    if (!identical(unique(sapply(param_vals, length)), as.integer(1))) {
-      stop("Parameter settings are ill-specified - please review them.")
-    }
-    params <- param_vals
+  ### Handle parameters, with different cases for parameter tuning and direct
+  ### specification (tuning = "none").
+  ### TODO: Handling if user tries to specify parameters for tuning using c()
+  ### instead of list(). This assumes ~perfect behavior (user gives sublists
+  ### only if parameter tuning or passing single specification, otherwise gives
+  ### specification single directly.
+  list_flag <- any(sapply(param_vals, methods::is, class2 = "list"))
+  if (list_flag) {
+    single_spec_flag <- identical(unique(sapply(param_vals, length)),
+                                  as.integer(1))
+  } else single_spec_flag <- TRUE
+
+  if (single_spec_flag) {
+    if (list_flag) {  # Case with single specification but sublists
+      params <- lapply(param_vals, unlist)
+    } else params <- param_vals  # Case with single specification
     params$n_tokens <- embed_instr$max_length
-    params$folder = folder_name
-    params$covars = param_vals$covars
-  } else {
+    params$folder <- folder_name
+    params$task <- task
+  } else if (tune_method == "none") {  # Case with no tuning but >1 setting
+    stop("Parameter settings are ill-specified - please review them.")
+  } else {  # Case with tuning and >1 setting
+    params <- param_vals
     params <- list("n_tokens" = embed_instr$max_length,
                    "folder" = folder_name,
-                   "covars" = param_vals$covars)
+                   "covars" = param_vals$covars,
+                   "task" = task)
 
     ### Create parameter grid (unless param_vals is list of vectors of length 1)
 
@@ -145,7 +165,7 @@ prep_data <- function(x, y_name, text_name, param_vals, task, test_prop = 0.2,
 
   ### Build input file with everything necessary for the model
   input <- list(dat = x,
-                params = param_vals,
+                params = params,
                 tokens = token_res$tokens,
                 vocab = token_res$vocab,
                 embed_method = embed_method,
