@@ -56,7 +56,6 @@ with Slurm, generically via a shell script, or not at all
 Prepare data for ConTextNet model
 }
 \examples{
-\dontrun{
 model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
                    "lr" = list(0.0001), "lambda_cnn" = list(0),
                    "lambda_corr" = list(0), "lambda_out" = list(0),
@@ -79,5 +78,4 @@ res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  embed_instr = list("name" = "bert-base-cased",
                                     "max_length" = 200),
                  folder_name = "example")
-}
 }

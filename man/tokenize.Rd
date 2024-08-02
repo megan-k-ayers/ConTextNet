@@ -41,5 +41,5 @@ data in \code{file_name}.
 }
 }
 \examples{
-\dontrun{res <- tokenize(imdb, max_length = 200)}
+\dontrun{res <- tokenize(imdb)}
 }

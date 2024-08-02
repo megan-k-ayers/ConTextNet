@@ -1,20 +1,30 @@
-### Custom regularizer for CNNs - penalty when there is a high correlation
-### between the outputs of each filter.
+#' Activation Correlation Regularizer
+#'
+#' Custom regularizer for CNN layers that applies a penalty proportional to the
+#' max correlation between activations of filters within a convolutional layer.
+#' Note: the nested function structure is necessary for passing in weight and
+#' params.
+#'
+#' @param weight Weight to apply to this penalty.
+#' @param params List of model parameters.
+#'
+#' @return The penalty value.
+#' @export
+#'
+#' @examples
 corr_regularizer <- function(weight, params) {
   function(w) {
 
     # Penalty is at token sequence activation level (stack all token sequences)
     w <- tf$reshape(w, shape = list(tf$multiply(tf$shape(w)[1], tf$shape(w)[2]),
                                     tf$shape(w)[3]))
-
     corrs <- tfp$stats$correlation(w)
-    corrs <- tf$subtract(corrs,  # Remove diagonal correlations of 1
-                         diag(1, nrow = params$n_filts))
-    corrs <- tf$maximum(corrs, 0)  # Set negative correlations to 0
 
-    penalty <- tf$reduce_max(corrs)  # Take max correlation as penalty
+    # Remove correlations of 1 on the diagonal, set negative correlations to 0.
+    corrs <- tf$subtract(corrs, diag(1, nrow = params$n_filts))
+    corrs <- tf$maximum(corrs, 0)
 
-    return(weight * penalty)
+    return(weight * tf$reduce_max(corrs))  # Take max correlation as penalty
 
   }
 }
@@ -25,7 +35,7 @@ corr_regularizer <- function(weight, params) {
 #' @param params List of model parameters - from tune_prep() or directly from
 #'        data_prep().
 #'
-#' @return
+#' @return A compiled keras model.
 #' @export
 #'
 #' @examples
@@ -42,8 +52,8 @@ corr_regularizer <- function(weight, params) {
 #' init_model(res$params)
 #' }
 init_model <- function(params) {
-
-  ### TODO: Clean up code - will piping things more help with long lines?
+  ### TODO: Eventually, examples should use intermediate files and not reference
+  ### other functions.
 
   ### Create input layer.
   input_layer <- keras::layer_input(shape = list(params$n_tokens,
@@ -70,13 +80,15 @@ init_model <- function(params) {
 
     cnn_name <- paste0("conv1d_", size)
     mp_name <- paste0("max_pool_", size)
-    conv1d_layer <- keras::layer_conv_1d(filters = params$n_filts,
-                                         kernel_size = size,
-                                         activation = "sigmoid",
-                                         kernel_regularizer = kernel_reg,
-                                         activity_regularizer = activity_reg,
-                                         name = cnn_name)(input_layer)
-    pooling_layer <- keras::layer_global_max_pooling_1d(name = mp_name)(conv1d_layer)
+    conv1d_layer <- input_layer %>%
+      keras::layer_conv_1d(filters = params$n_filts,
+                           kernel_size = size,
+                           activation = "sigmoid",
+                           kernel_regularizer = kernel_reg,
+                           activity_regularizer = activity_reg,
+                           name = cnn_name)
+    pooling_layer <- conv1d_layer %>%
+      keras::layer_global_max_pooling_1d(name = mp_name)
     conv_layers[[as.character(size)]] <- pooling_layer
 
   }
@@ -109,9 +121,10 @@ init_model <- function(params) {
                                      name = "output")(concat_cnns)
 
   ### Create and compile model.
+  optimizer <- tf$keras$optimizers$legacy$Adam(learning_rate = params$lr)
   model <- keras::keras_model(inputs = train_input,
                               outputs = output_layer)
-  model %>% keras::compile(optimizer = tf$keras$optimizers$legacy$Adam(learning_rate = params$lr),
+  model %>% keras::compile(optimizer = optimizer,
                            loss = loss_type,
                            metrics = "mean_absolute_error")
 

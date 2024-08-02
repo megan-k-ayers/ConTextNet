@@ -7,21 +7,14 @@
 #'
 #' @examples
 #' \dontrun{
-#' model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
-#'                      "lr" = list(0.0001), "lambda_cnn" = list(0),
-#'                      "lambda_corr" = list(0), "lambda_out" = list(0),
-#'                      "epochs" = list(20), "batch_size" = list(32),
-#'                      "covars" = list(NULL))
-#' input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
-#'                         model_params = model_params, task = "class",
-#'                         folder_name = "example")
 #' res <- embed(input_list)
 #' }
 embed <- function(input_list) {
   ### TODO: Is this the best place to use reticulate? Should this be in a setup
   ### script that saves it as a global variable?
+  ### TODO: Eventually, examples should use intermediate files.
   if (input_list$embed_method != "file") {
-    if (input_list$embed_method =="default") {
+    if (input_list$embed_method == "default") {
       model_name <- "prajjwal1/bert-tiny"
     } else if (input_list$embed_method == "name") {
       model_name <- input_list$embed_instr$name
@@ -29,7 +22,7 @@ embed <- function(input_list) {
     xfmr <- reticulate::import("transformers")
     embed_model <- xfmr$AutoModel$from_pretrained(model_name)
     embeds <- embed_model(attention_mask = input_list$tokens$attention_mask,
-                           input_ids = input_list$tokens$input_ids)
+                          input_ids = input_list$tokens$input_ids)
     embeds <- embeds$last_hidden_state
     embeds <- embeds$detach()$numpy()
     input_list$params$embed_dim <- dim(embeds)[3]

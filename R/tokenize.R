@@ -31,8 +31,11 @@
 #' \dontrun{res <- tokenize(imdb)}
 tokenize <- function(x, embed_method = "default",
                      embed_instr = list("max_length" = 200)) {
-  ### TODO: This downloads files to the user's library -- this should be made
-  ### clear.
+  ### TODO:Looks like tensor objects will not get saved properly to RDS. Can
+  ### I save intermediate files as regular data frames instead and convert them
+  ### back? This will help with keeping the same format between files too.
+  ### TODO: Using default or name methods download files to the user's library
+  ### -- this should be made clear.
   ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
   ### TODO: Is this the best place to use reticulate? Should this be in a setup
   ### script that saves it as a global variable?

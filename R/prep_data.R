@@ -95,7 +95,6 @@ create_grid <- function() {
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
 #'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
 #'                    "lambda_corr" = list(0), "lambda_out" = list(0),
@@ -118,7 +117,6 @@ create_grid <- function() {
 #'                  embed_instr = list("name" = "bert-base-cased",
 #'                                     "max_length" = 200),
 #'                  folder_name = "example")
-#' }
 prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
                       embed_method = "default",
                       embed_instr = list("max_length" = 200),
@@ -144,14 +142,14 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
 
-  ### Prep formatting of meta-params (which include model params if only a
+  ### Prep formatting of meta-params (which will include model params if only a
   ### single model is being run).
   params <- prep_params(model_params, tune_method)
   params$n_tokens <- embed_instr$max_length
   params$folder <- folder_name
   params$task <- task
 
-  ### Create parameter grid (unless param_vals is list of vectors of length 1)
+  ### Create parameter grid if tuning is happening
 
 
   ### Write shell script(s), whatever will be needed for running on the cluster,
