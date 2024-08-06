@@ -10,8 +10,8 @@
 #' res <- embed(input_list)
 #' }
 embed <- function(input_list) {
-  ### TODO: Is this the best place to use reticulate? Should this be in a setup
-  ### script that saves it as a global variable?
+  ### TODO: Figure out better reticulate import solution. Should this be in a
+  ### setup script that saves it as a global variable?
   ### TODO: Eventually, examples should use intermediate files.
   if (input_list$embed_method != "file") {
     if (input_list$embed_method == "default") {
@@ -20,9 +20,18 @@ embed <- function(input_list) {
       model_name <- input_list$embed_instr$name
     }
     xfmr <- reticulate::import("transformers")
+    np <- reticulate::import("numpy")
+    torch <- reticulate::import("torch")
+
+    # Need to reformat tokens and attention mask as torch tensors for the
+    # transformers library.
+    tokens <- torch$tensor(input_list$tokens, dtype = torch$int64)
+    mask <- torch$tensor(input_list$token_mask, dtype = torch$int64)
+
+    # Get embeddings, store them back in the model input list along with the
+    # embedding dimension.
     embed_model <- xfmr$AutoModel$from_pretrained(model_name)
-    embeds <- embed_model(attention_mask = input_list$tokens$attention_mask,
-                          input_ids = input_list$tokens$input_ids)
+    embeds <- embed_model(attention_mask = mask, input_ids = tokens)
     embeds <- embeds$last_hidden_state
     embeds <- embeds$detach()$numpy()
     input_list$params$embed_dim <- dim(embeds)[3]

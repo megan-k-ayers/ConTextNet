@@ -31,14 +31,11 @@
 #' \dontrun{res <- tokenize(imdb)}
 tokenize <- function(x, embed_method = "default",
                      embed_instr = list("max_length" = 200)) {
-  ### TODO:Looks like tensor objects will not get saved properly to RDS. Can
-  ### I save intermediate files as regular data frames instead and convert them
-  ### back? This will help with keeping the same format between files too.
   ### TODO: Using default or name methods download files to the user's library
   ### -- this should be made clear.
   ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
-  ### TODO: Is this the best place to use reticulate? Should this be in a setup
-  ### script that saves it as a global variable?
+  ### TODO: Figure out better reticulate import solution. Should this be in a
+  ### setup script that saves it as a global variable?
   ### TODO: Include default tokenizer/embedding model as a saved file rather
   ### than pulling it from Hugging Face.
 
@@ -62,10 +59,13 @@ tokenize <- function(x, embed_method = "default",
   # Fast tokenizers often throw excessive parallelization warnings, so opting
   # not to use them for now.
   xfmr <- reticulate::import("transformers")
-  tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE)
+  tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE,
+                                              from_tf = TRUE)
   tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
                   max_length = as.integer(max_length), return_tensors = "pt")
   vocab <- tknzr$get_vocab()
 
-  return(list("tokens" = tokens, "vocab" = vocab))
+  return(list("tokens" = tokens$input_ids$numpy(),
+              "mask" = tokens$attention_mask$numpy(),
+              "vocab" = vocab))
 }

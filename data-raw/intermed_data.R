@@ -4,6 +4,8 @@
 # -----------------------------------------------------------------------------
 
 load_all()
+torch <- reticulate::import("torch")
+np <- reticulate::import("numpy")
 
 # Specify toy example parameters, use with IMDB data.
 model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
