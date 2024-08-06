@@ -7,12 +7,11 @@
 #'
 #' @examples
 #' \dontrun{
-#' res <- embed(input_list)
+#' res <- embed(imdb_input_list)
 #' }
 embed <- function(input_list) {
   ### TODO: Figure out better reticulate import solution. Should this be in a
   ### setup script that saves it as a global variable?
-  ### TODO: Eventually, examples should use intermediate files.
   if (input_list$embed_method != "file") {
     if (input_list$embed_method == "default") {
       model_name <- "prajjwal1/bert-tiny"
@@ -20,7 +19,6 @@ embed <- function(input_list) {
       model_name <- input_list$embed_instr$name
     }
     xfmr <- reticulate::import("transformers")
-    np <- reticulate::import("numpy")
     torch <- reticulate::import("torch")
 
     # Need to reformat tokens and attention mask as torch tensors for the

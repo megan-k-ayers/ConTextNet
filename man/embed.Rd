@@ -18,6 +18,6 @@ Get embeddings of texts
 }
 \examples{
 \dontrun{
-res <- embed(input_list)
+res <- embed(imdb_input_list)
 }
 }

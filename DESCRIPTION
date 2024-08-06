@@ -16,7 +16,9 @@ Imports:
     dplyr,
     keras,
     methods,
+    MLmetrics,
     reticulate,
+    stats,
     tensorflow,
     tfprobability
 Depends: 
