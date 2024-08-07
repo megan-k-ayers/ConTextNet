@@ -20,7 +20,8 @@ Imports:
     reticulate,
     stats,
     tensorflow,
-    tfprobability
+    tfprobability,
+    tidyr
 Depends: 
     R (>= 2.10)
 LazyData: true

@@ -153,7 +153,7 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   ### Scale covariate columns (if included)
   if (!is.null(params$covars)) {  # Case without tuning
     x <- scale(x[, params$covars])
-  } else if (any(!is.null(model_params$covars))) {  # Case with tuning
+  } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
     x <- scale(x[, unique(unlist(model_params$covars))])
   }
 

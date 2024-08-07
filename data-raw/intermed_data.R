@@ -12,8 +12,9 @@ model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
                      "epochs" = list(20), "batch_size" = list(32),
                      "patience" = 15,  "covars" = list(NULL))
 imdb_input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
-                        model_params = model_params, task = "class",
-                        folder_name = "example")
+                             model_params = model_params, task = "class",
+                             folder_name = "example",
+                             embed_instr = list(max_length = 50))
 
 imdb_embed <- embed(imdb_input_list)
 
