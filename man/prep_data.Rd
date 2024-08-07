@@ -60,14 +60,15 @@ model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
                    "lr" = list(0.0001), "lambda_cnn" = list(0),
                    "lambda_corr" = list(0), "lambda_out" = list(0),
                    "epochs" = list(20), "batch_size" = list(32),
-                   "covars" = list(NULL))
+                   "patience" = 15, "covars" = list(NULL))
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  model_params = model_params, task = "class",
                  folder_name = "example")
 
 model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
-                   "epochs" = 20, "batch_size" = 32, "covars" = NULL)
+                   "epochs" = 20, "batch_size" = 32, "patience" = 15,
+                   "covars" = NULL)
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  model_params = model_params, task = "class",
                  folder_name = "example")

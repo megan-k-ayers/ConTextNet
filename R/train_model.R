@@ -13,8 +13,6 @@ train_model <- function(inputs, run_quiet = FALSE) {
   ### TODO: Functions could use less generic names - something connected to
   ### the package?
   ### TODO: Write progress (reading data, class weights, etc.) to a log.
-  ### TODO: Include patience as a param.
-  ### TODO: Move covariate scaling to prep_data().
 
   ### Load model inputs if inputs is a path, then unpack them.
   if (methods::is(inputs, "character")) inputs <- readRDS(inputs)
@@ -33,11 +31,8 @@ train_model <- function(inputs, run_quiet = FALSE) {
                       "1" = (1 / sum(y_train == 1)) * (nrow(x_train) / 5))
   } else class_wts <- NULL
 
-  ### Scale covariates, if using them.
-  if (cov_flag) {
-    c_train <- as.matrix(inputs$dat[train_inds, params$covars])
-    c_train <- scale(c_train)
-  }
+  ### Prep covariates as inputs, if using them.
+  if (cov_flag) c_train <- as.matrix(inputs$dat[train_inds, params$covars])
   train_inputs <- if (cov_flag) list(x_train, c_train) else x_train
 
   ### Initialize the model.
@@ -45,7 +40,7 @@ train_model <- function(inputs, run_quiet = FALSE) {
 
   ### Train the model with early stopping.
   callback = tf$keras$callbacks$EarlyStopping(monitor = 'val_loss',
-                                              patience = 15)
+                                              patience = params$patience)
   verbose <- if (run_quiet) 0 else getOption("keras.fit_verbose",
                                              default = "auto")
   history <- model %>%

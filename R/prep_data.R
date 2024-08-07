@@ -99,14 +99,15 @@ create_grid <- function() {
 #'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
 #'                    "lambda_corr" = list(0), "lambda_out" = list(0),
 #'                    "epochs" = list(20), "batch_size" = list(32),
-#'                    "covars" = list(NULL))
+#'                    "patience" = 15, "covars" = list(NULL))
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
 #'                  model_params = model_params, task = "class",
 #'                  folder_name = "example")
 #'
 #' model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
 #'                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
-#'                    "epochs" = 20, "batch_size" = 32, "covars" = NULL)
+#'                    "epochs" = 20, "batch_size" = 32, "patience" = 15,
+#'                    "covars" = NULL)
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
 #'                  model_params = model_params, task = "class",
 #'                  folder_name = "example")
@@ -148,6 +149,13 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   params$n_tokens <- embed_instr$max_length
   params$folder <- folder_name
   params$task <- task
+
+  ### Scale covariate columns (if included)
+  if (!is.null(params$covars)) {  # Case without tuning
+    x <- scale(x[, params$covars])
+  } else if (any(!is.null(model_params$covars))) {  # Case with tuning
+    x <- scale(x[, unique(unlist(model_params$covars))])
+  }
 
   ### Create parameter grid if tuning is happening
 

@@ -10,11 +10,11 @@ model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
                      "lr" = list(0.0001), "lambda_cnn" = list(0),
                      "lambda_corr" = list(0), "lambda_out" = list(0),
                      "epochs" = list(20), "batch_size" = list(32),
-                     "covars" = list(NULL))
+                     "patience" = 15,  "covars" = list(NULL))
 imdb_input_list <- prep_data(x = imdb, y_name = "y", text_name = "text",
                         model_params = model_params, task = "class",
                         folder_name = "example")
 
 imdb_embed <- embed(imdb_input_list)
 
-usethis::use_data(imdb_input_list, imdb_embed, internal = TRUE)
+usethis::use_data(imdb_input_list, imdb_embed, internal = TRUE, overwrite = TRUE)
