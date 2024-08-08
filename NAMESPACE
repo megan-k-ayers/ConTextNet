@@ -2,7 +2,6 @@
 
 export(check_setup)
 export(eval_model)
-export(get_phrase_acts)
 export(get_phrase_acts_df)
 export(init_model)
 export(initialize)

@@ -1,18 +1,17 @@
 #' Get Phrase Filter Activations (single layer)
 #'
 #' @param model R Keras trained model
-#' @param k Kernel size (indicating which convolutional layer to consider)
 #' @param input Model input (either embedding matrix or list with embedding
 #'        matrix and covariate matrix)
+#' @param k Kernel size (indicating which convolutional layer to consider)
 #' @param n_filts The number of filters in this convolutional layer
 #' @param max_length Number of tokens
 #'
 #' @return A data frame of phrase filter activations for this convolutional
 #'         layer.
-#' @export
 #'
 #' @examples
-get_phrase_acts <- function(model, k, input, n_filts, max_length) {
+get_phrase_acts <- function(model, input, k, n_filts, max_length) {
 
   # Define intermediate CNN model from the trained model, pull its predictions.
   this <- paste0("conv1d_", k)
@@ -78,7 +77,7 @@ get_phrase_acts_df <- function(model, embeds, params, dat = NULL) {
   filter_names <- paste0("F", as.numeric(sapply(n_filts, function(n) 1:n)))
   filter_names <- paste0("CNN", rep(kern_sizes, n_filts), "_", filter_names)
   for (k in kern_sizes) {
-    phrase_act <- rbind(phrase_act, get_phrase_acts(model, k, input, n_filts,
+    phrase_act <- rbind(phrase_act, get_phrase_acts(model, input, k, n_filts,
                                                     max_length))
   }
 
@@ -87,97 +86,54 @@ get_phrase_acts_df <- function(model, embeds, params, dat = NULL) {
 }
 
 
-# get_top_phrases <- function() {
-#   # If we want to save something, but this model doesn't have a folder yet,
-#   # create it.
-#   if (!is.null(save_path)) {
-#     if (!file.exists(paste0(save_path, "/"))){
-#       dir.create(paste0(save_path, "/"))
-#     }
-#   }
-#
-#   # Deduce needed parameters from model passed in (could also pass params but
-#   # maybe this is more direct/good sanity check?)
-#   layer_names <- sapply(1:length(model$layers), function(i) {
-#     model$layers[[i]]$name })
-#   conv_ind <- which(grepl("conv1d", layer_names))
-#
-#   kernel_sizes <- sapply(conv_ind, function(i) {
-#     as.numeric(model$layers[[i]]$kernel_size) })
-#   n_filts <- sapply(conv_ind, function(i) {
-#     as.numeric(model$layers[[i]]$filters) })
-#   max_length <- ncol(test$tokens)
-#
-#   if ("covars" %in% layer_names) covars_flag <- TRUE else covars_flag <- FALSE
-#
-#
-#   # Get data frame of all phrase activations on each filter from each CNN.
-#   filter_names <- paste0("F", as.numeric(sapply(n_filts, function(n) 1:n)))
-#   phrase_act <- as.data.frame(get_phrase_acts(model, test, params))
-#
-#   # Get word index from fitted tokenizer to more easily get words from tokens
-#   vocab <- names(tokenizer$get_vocab())  # Just need to double check indexing
-#
-#
-#   # Function to retrieve phrase given the text sample index, the start index
-#   # of the phrase from the CNN window, and the kernel size k
-#   get_phrase <- function(sample_ind, phrase_start, k) {
-#
-#     doc_tokens <- test$tokens[sample_ind, ]
-#     these_tokens <- doc_tokens[phrase_start:(phrase_start + k - 1)]
-#
-#     collapse <- if (params$language == "english") " " else ""
-#     return(paste(vocab[these_tokens + 1], collapse = collapse))
-#   }
-#
-#
-#   if (m == "all") {  # If we want to link all phrases to activations:
-#
-#     m <- nrow(phrase_act)
-#     res <- phrase_act
-#     res$text <- sapply(1:nrow(res), function(i) {
-#       get_phrase(res$sample_id[i], res$phrase_id[i],
-#                  as.numeric(gsub("CNN.([0-9]+) F[0-9]+", "\\1",
-#                                  res$filter[i])))})
-#
-#   } else { # Get top m phrases for each CNN filter.
-#     top_filt_phrases <- vector("list")
-#     for (f in unique(phrase_act$filter)) {
-#
-#       these <- phrase_act[phrase_act$filter == f, ]
-#       k <- gsub("CNN.([0-9]+) F[0-9]+", "\\1", f)
-#
-#       these <- these[order(these$activation, decreasing = TRUE), ]
-#       these <- these[1:m, ]
-#
-#       # Collecting top m phrases for this filter and recording in the list
-#       # top_filt_phrases.
-#       these$phrase <- sapply(1:nrow(these), function(i){
-#         get_phrase(these[i, "sample_id"], these[i, "phrase_id"],
-#                    as.numeric(k))})
-#       top_filt_phrases[[f]] <- paste0(these$phrase, ":   ",
-#                                       round(these[, "activation"], 4))
-#       top_filt_phrases[[paste0(f, "_id")]] <- these$sample_id
-#
-#     }
-#
-#     res <- as.data.frame(top_filt_phrases)
-#
-#   }
-#
-#
-#   if (!is.null(save_path)) {
-#     for (f in unique(phrase_act$filter)) {
-#       Encoding(res[, gsub(" ", ".", f)]) <- "UTF8"
-#     }
-#     readr::write_excel_csv(res, paste0(save_path, "/top_", m, "_phrases.csv"))
-#   }
-#
-#   return(res)
-#
-# }
+# Function to retrieve phrase given the text sample index, the start index
+# of the phrase from the CNN window, and the kernel size k
+get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
+  ### TODO: Should be an easy function to write tests for for my peace of mind.
+  these_tokens <- doc_tokens[phrase_id:(phrase_id + k - 1)]
+  return(paste(vocab[these_tokens + 1], collapse = " "))
+}
 
 
+# model <- train_model(imdb_embed)
+# tokens <- imdb_embed$tokens
+# embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
+# dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
+# params <- imdb_embed$params
+# vocab <- imdb_embed$vocab
+# get_top_phrases(model, tokens, embeds, dat, params, vocab)
+get_top_phrases <- function(model, tokens, embeds, dat, params, vocab, m = 10) {
+  ### TODO: Documentation!
+  ### TODO: Removing options for Chinese for now, consider reintroducing later.
+  ### TODO: Faster loop for m = "all" option - parallel?
 
+  ### Get data frame of all phrase activations on each filter from each CNN.
+  acts <- as.data.frame(get_phrase_acts_df(model, embeds, params))
+  acts$k <- as.numeric(gsub("CNN([0-9]+)_F[0-9]+", "\\1", acts$filter))
 
+  vocab <- names(vocab) ## Just making the vocab more intuitive to work with.
+
+  ### Retrieve phrases corresponding to the input embedding sequences.
+  if (m == "all") {  # If we want to do this for all activations...
+    p <- acts[, c("sample_id", "phrase_id", "k")]
+    p <- p[!duplicated(p), ]
+    p$text <- sapply(1:nrow(p), function(i) {
+      get_phrase(tokens[p$sample_id[i], ], p$phrase_id[i], p$k[i], vocab)})
+    acts <- merge(acts, p, by = c("sample_id", "phrase_id", "k"))
+    return(acts)
+
+  } else {  # Otherwise, get top m phrases for each CNN filter...
+    res <- data.frame("filter" = character(), "activation" = numeric(),
+                      "text" = character())
+    for (f in unique(acts$filter)) {
+      these <- acts[acts$filter == f, ]
+      these <- these[order(these$activation, decreasing = TRUE), ][1:m, ]
+      these$text <- sapply(1:nrow(these), function(i){
+        get_phrase(tokens[these$sample_id[i], ], these$phrase_id[i],
+                   these$k[i], vocab)})
+      res <- rbind(res, these)
+    }
+    return(res)
+  }
+}
 
