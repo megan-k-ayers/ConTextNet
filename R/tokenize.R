@@ -64,6 +64,7 @@ tokenize <- function(x, embed_method = "default",
   tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
                   max_length = as.integer(max_length), return_tensors = "pt")
   vocab <- tknzr$get_vocab()
+  vocab <- names(vocab)  # Just making vocab more intuitive to work with.
 
   return(list("tokens" = tokens$input_ids$numpy(),
               "mask" = tokens$attention_mask$numpy(),

@@ -13,6 +13,8 @@ train_model <- function(inputs, run_quiet = FALSE) {
   ### TODO: Functions could use less generic names - something connected to
   ### the package?
   ### TODO: Write progress (reading data, class weights, etc.) to a log.
+  ### TODO: Should be reproducible: figure out seed setting w/o altering user
+  ### global seed settings.
 
   ### Load model inputs if inputs is a path, then unpack them.
   if (methods::is(inputs, "character")) inputs <- readRDS(inputs)

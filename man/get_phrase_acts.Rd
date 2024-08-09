@@ -4,15 +4,15 @@
 \alias{get_phrase_acts}
 \title{Get Phrase Filter Activations (single layer)}
 \usage{
-get_phrase_acts(model, k, input, n_filts, max_length)
+get_phrase_acts(model, input, k, n_filts, max_length)
 }
 \arguments{
 \item{model}{R Keras trained model}
 
-\item{k}{Kernel size (indicating which convolutional layer to consider)}
-
 \item{input}{Model input (either embedding matrix or list with embedding
 matrix and covariate matrix)}
+
+\item{k}{Kernel size (indicating which convolutional layer to consider)}
 
 \item{n_filts}{The number of filters in this convolutional layer}
 

@@ -86,8 +86,21 @@ get_phrase_acts_df <- function(model, embeds, params, dat = NULL) {
 }
 
 
-# Function to retrieve phrase given the text sample index, the start index
-# of the phrase from the CNN window, and the kernel size k
+#' Get Text Phrase from Document Tokens
+#'
+#' Retrieve a phrase given the starting character within `doc_tokens`, the
+#' phrase length `k`, and the `vocab` list from the tokenizer.
+#'
+#' @param doc_tokens Tokens for the entire document that the phrase is within
+#' @param phrase_id Position of the starting character of the phrase
+#' @param k Phrase length
+#' @param vocab Vocabulary list from the tokenizer.
+#'
+#' @return String containing the phrase.
+#'
+#' @examples \dontrun{
+#' get_phrase(imdb_embed$tokens[1, ], 6, 4, imdb_embed$vocab)
+#' }
 get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
   ### TODO: Should be an easy function to write tests for for my peace of mind.
   these_tokens <- doc_tokens[phrase_id:(phrase_id + k - 1)]
@@ -95,13 +108,28 @@ get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
 }
 
 
-# model <- train_model(imdb_embed)
-# tokens <- imdb_embed$tokens
-# embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
-# dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
-# params <- imdb_embed$params
-# vocab <- imdb_embed$vocab
-# get_top_phrases(model, tokens, embeds, dat, params, vocab)
+#' Get Highest Activated Filters
+#'
+#' @param model Trained Keras model
+#' @param tokens Data frame with tokens corresponding to `dat$text`
+#' @param embeds Data frame with embeddings for `tokens`
+#' @param dat Data frame with text samples to assess activations for
+#' @param params List of model parameters used in training `model`
+#' @param vocab Named list, where values are token values and names are the
+#'        corresponding text
+#' @param m Number of top phrases to pull per filter.
+#'
+#' @return Data frame with top phrases and their activations.
+#'
+#' @examples \dontrun{
+#' model <- train_model(imdb_embed)
+#' tokens <- imdb_embed$tokens
+#' embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
+#' dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
+#' params <- imdb_embed$params
+#' vocab <- imdb_embed$vocab
+#' get_top_phrases(model, tokens, embeds, dat, params, vocab)
+#' }
 get_top_phrases <- function(model, tokens, embeds, dat, params, vocab, m = 10) {
   ### TODO: Documentation!
   ### TODO: Removing options for Chinese for now, consider reintroducing later.
@@ -111,7 +139,12 @@ get_top_phrases <- function(model, tokens, embeds, dat, params, vocab, m = 10) {
   acts <- as.data.frame(get_phrase_acts_df(model, embeds, params))
   acts$k <- as.numeric(gsub("CNN([0-9]+)_F[0-9]+", "\\1", acts$filter))
 
-  vocab <- names(vocab) ## Just making the vocab more intuitive to work with.
+  ### Attach output layer weights associated with each filter.
+  out_wts <- model$get_layer("output")$get_weights()[[1]]
+  filt_names <- as.character(sapply(params$kern_sizes, function(k) {
+    paste0("CNN", k, "_", "F", 1:params$n_filts)}))
+  out_wts <- data.frame(filter = filt_names, wt = out_wts)
+  acts <- merge(acts, out_wts, by = "filter")
 
   ### Retrieve phrases corresponding to the input embedding sequences.
   if (m == "all") {  # If we want to do this for all activations...
