@@ -4,16 +4,12 @@
 \alias{get_top_phrases}
 \title{Get Highest Activated Filters}
 \usage{
-get_top_phrases(model, tokens, embeds, dat, params, vocab, m = 10)
+get_top_phrases(phrase_acts, tokens, params, vocab, m = 10)
 }
 \arguments{
-\item{model}{Trained Keras model}
+\item{phrase_acts}{Data frame with phrase activations from phrase_acts()}
 
 \item{tokens}{Data frame with tokens corresponding to \code{dat$text}}
-
-\item{embeds}{Data frame with embeddings for \code{tokens}}
-
-\item{dat}{Data frame with text samples to assess activations for}
 
 \item{params}{List of model parameters used in training \code{model}}
 
@@ -36,6 +32,7 @@ embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
 dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
 params <- imdb_embed$params
 vocab <- imdb_embed$vocab
-get_top_phrases(model, tokens, embeds, dat, params, vocab)
+phrase_acts <- get_phrase_acts(model, embeds, params, dat)
+get_top_phrases(tokens, embeds, dat, params, vocab)
 }
 }

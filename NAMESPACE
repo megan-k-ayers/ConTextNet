@@ -2,7 +2,7 @@
 
 export(check_setup)
 export(eval_model)
-export(get_phrase_acts_df)
+export(get_output_wts)
 export(init_model)
 export(initialize)
 export(prep_data)
