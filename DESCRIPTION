@@ -19,9 +19,9 @@ Imports:
     methods,
     MLmetrics,
     reticulate,
+    rlang,
     stats,
     tensorflow,
-    tfprobability,
     tidyr
 Depends: 
     R (>= 2.10)

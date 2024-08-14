@@ -3,7 +3,7 @@
 
 ## usethis namespace: start
 #' @importFrom dplyr %>%
+#' @importFrom rlang .data
 #' @importFrom tensorflow tf
-#' @importFrom tfprobability tfp
 ## usethis namespace: end
 NULL

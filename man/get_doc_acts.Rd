@@ -4,7 +4,7 @@
 \alias{get_doc_acts}
 \title{Get Document Level Filter Activation Data Frame}
 \usage{
-get_doc_acts(model, embeds, params, dat = NULL)
+get_doc_acts(model, embeds, params, dat)
 }
 \arguments{
 \item{model}{R Keras trained model}
@@ -13,7 +13,7 @@ get_doc_acts(model, embeds, params, dat = NULL)
 
 \item{params}{Model parameter list}
 
-\item{dat}{Original data set (only necessary if covariates are used in model)}
+\item{dat}{Original data set}
 }
 \value{
 Data frame with convolutional layer activations for all input word

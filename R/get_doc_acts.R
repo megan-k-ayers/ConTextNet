@@ -38,7 +38,7 @@ get_doc_acts <- function(model, embeds, params, dat) {
     this <- paste0("max_pool_", k)
     int_model <- keras::keras_model(inputs = model$input,
                                     outputs = model$get_layer(this)$output)
-    these_acts <- predict(int_model, input)
+    these_acts <- stats::predict(int_model, input)
     these_acts <- as.data.frame(these_acts)
     names(these_acts) <- paste0("CNN", k, "_", "F", 1:params$n_filts)
     acts[, names(these_acts)] <- these_acts

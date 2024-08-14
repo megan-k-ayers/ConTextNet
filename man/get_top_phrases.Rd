@@ -33,6 +33,6 @@ dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
 params <- imdb_embed$params
 vocab <- imdb_embed$vocab
 phrase_acts <- get_phrase_acts(model, embeds, params, dat)
-get_top_phrases(tokens, embeds, dat, params, vocab)
+get_top_phrases(phrase_acts, tokens, params, vocab)
 }
 }

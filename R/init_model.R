@@ -12,18 +12,31 @@
 #'
 #' @examples
 corr_regularizer <- function(weight, f) {
+  ### TODO: Write test/separate func to compare correlation in here to regular
+  ### R cor(). Note that here we use /N, cor() uses /(N-1).
   function(w) {
 
     # Penalty is at token sequence activation level (stack all token sequences)
     w <- tf$reshape(w, shape = list(tf$multiply(tf$shape(w)[1], tf$shape(w)[2]),
                                     tf$shape(w)[3]))
-    corrs <- tfp$stats$correlation(w)
 
-    # Remove correlations of 1 on the diagonal, set negative correlations to 0.
+    # Calculating correlation manually - tensorflow_probability would be much
+    # easier, but experiencing some version control issues with tensorflow
+    # version that R Keras expects.
+    mean_w <- tf$reduce_mean(w, axis = as.integer(0), keepdims = TRUE)
+    covs <- tf$divide(tf$matmul(tf$transpose(tf$subtract(w, mean_w)),
+                                tf$subtract(w, mean_w)),
+                      tf$cast(tf$shape(w)[1], tf$float32))
+    stdev <- tf$sqrt(tf$linalg$diag_part(covs))
+    stdev <- tf$tensordot(stdev, stdev, axes = as.integer(0))
+    corrs <- tf$divide(covs, stdev)
+
+    # Remove correlations of 1 on the diagonal.
     corrs <- tf$subtract(corrs, diag(1, nrow = f))
-    corrs <- tf$maximum(corrs, 0)
 
-    return(weight * tf$reduce_max(corrs))  # Take max correlation as penalty
+    # Take max correlation as penalty (reminder that this will be 0 if all
+    # correlations are negative because the variance diag was set to 0)
+    return(weight * tf$reduce_max(corrs))
 
   }
 }
@@ -43,13 +56,13 @@ corr_regularizer <- function(weight, f) {
 cnn_mp_layer <- function(k, f, l_cnn, l_corr, input_layer) {
 
   kernel_reg <- keras::regularizer_l2(l_cnn)  # CNN kernel regularizer
-  # activity_reg <- corr_regularizer(l_corr, f)  # Correlation regularizer
+  activity_reg <- corr_regularizer(l_corr, f)  # Correlation regularizer
   conv1d_layer <- input_layer %>%  # 1D Convolutional layer
     keras::layer_conv_1d(filters = f,
                          kernel_size = k,
                          activation = "sigmoid",
                          kernel_regularizer = kernel_reg,
-                         # activity_regularizer = activity_reg,
+                         activity_regularizer = activity_reg,
                          name = paste0("conv1d_", k))
   pooling_layer <- conv1d_layer %>%  # Max pooled layer (within document)
     keras::layer_global_max_pooling_1d(name = paste0("max_pool_", k))
