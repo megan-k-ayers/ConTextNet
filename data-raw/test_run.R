@@ -6,34 +6,36 @@
 rm(list = ls())
 library(devtools)
 load_all()
+set.seed(123)
+tensorflow::set_random_seed(123)
 
 imdb_full <- read.csv("data-raw/imdb_full.csv")
-imdb_full <- imdb_full[sample(1:nrow(imdb_full), 50), ]
+imdb_full <- imdb_full[sample(1:nrow(imdb_full), 10000), ]
 
-model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
-                     "lr" = list(0.00001), "lambda_cnn" = list(0.01),
-                     "lambda_corr" = list(0), "lambda_out" = list(0.01),
-                     "epochs" = list(100), "batch_size" = list(25),
-                     "patience" = 20,  "covars" = list(NULL))
+model_params <- list("n_filts" = list(8), "kern_sizes" = list(c(5)),
+                     "lr" = list(0.001), "lambda_cnn" = list(0.001),
+                     "lambda_corr" = list(0), "lambda_out" = list(0.005),
+                     "epochs" = list(100), "batch_size" = list(32),
+                     "patience" = 30,  "covars" = list(NULL))
 inputs <- prep_data(x = imdb_full, y_name = "y", text_name = "text",
                     model_params = model_params, task = "class",
                     folder_name = "example",
-                    embed_instr = list(max_length = 50))
+                    embed_instr = list(max_length = 100))
 input_embeds <- embed(inputs)
-tf$keras$backend$clear_session()
-gc()
-saveRDS(input_embeds, "data-raw/imdb_embeds_temp.RDS")
+model <- train_model(input_embeds)
 
-these <- readRDS("data-raw/imdb_embeds_temp.RDS")
-model <- train_model(these)
-eval_model(model, these$embeds, these$dat$y,
-           metrics = c("mse", "f1", "accuracy"))
+test_embeds <- input_embeds$embeds[input_embeds$dat$fold == "test", , ]
+test_y <- input_embeds$dat$y[input_embeds$dat$fold == "test"]
+eval_model(model, test_embeds, test_y, metrics = c("mse", "f1", "accuracy"))
 
-p_acts <- get_phrase_acts(model, these$embeds, these$params)
-get_top_phrases(p_acts, these$tokens, these$params,
-                these$vocab)
+p_acts <- get_phrase_acts(model, test_embeds, input_embeds$params)
+get_top_phrases(p_acts, input_embeds$tokens[input_embeds$dat$fold == "test", ],
+                input_embeds$params, input_embeds$vocab)
+get_top_phrases_quick(p_acts,
+                      input_embeds$tokens[input_embeds$dat$fold == "test", ],
+                      input_embeds$params, input_embeds$vocab)
 
-d_acts <- get_doc_acts(model, these$embeds, these$params,
-                       these$dat)
+d_acts <- get_doc_acts(model, test_embeds, input_embeds$params,
+                       input_embeds$dat[input_embeds$dat$fold == "test", ])
 plot_doc_acts(d_acts)
 

@@ -20,7 +20,7 @@ get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
 }
 
 
-#' Get Highest Activated Filters
+#' Get Highest Activated Phrases
 #'
 #' @param phrase_acts Data frame with phrase activations from phrase_acts()
 #' @param tokens Data frame with tokens corresponding to `dat$text`
@@ -67,5 +67,27 @@ get_top_phrases <- function(phrase_acts, tokens, params, vocab, m = 10) {
     }
     return(res)
   }
+}
+
+
+#' Get Quick Summary of Highest Activated Filters
+#'
+#' @return A string listing the top 3 phrases most highly associated with the
+#'         top 4 convolutional filters with the highest output layer weight.
+#' @export
+#' @inheritParams get_top_phrases
+#'
+#' @examples
+get_top_phrases_quick <- function(phrase_acts, tokens, params, vocab) {
+
+  acts <- get_top_phrases(phrase_acts, tokens, params, vocab, m = 3)
+  acts <- acts[, c("filter", "wt", "text")]
+  acts <- aggregate(acts$text, by = list(filters = acts$filter, wt = acts$wt),
+                    paste0, collapse = ", ")
+  acts <- acts[order(abs(acts$wt), decreasing = TRUE), ]
+
+  phrases <- paste(paste0(round(acts$wt[1:3], 3), ": [", acts$x[1:3], "]"), collapse = ", ")
+  return(phrases)
+
 }
 

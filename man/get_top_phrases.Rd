@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_top_phrases.R
 \name{get_top_phrases}
 \alias{get_top_phrases}
-\title{Get Highest Activated Filters}
+\title{Get Highest Activated Phrases}
 \usage{
 get_top_phrases(phrase_acts, tokens, params, vocab, m = 10)
 }
@@ -22,7 +22,7 @@ corresponding text}
 Data frame with top phrases and their activations.
 }
 \description{
-Get Highest Activated Filters
+Get Highest Activated Phrases
 }
 \examples{
 \dontrun{

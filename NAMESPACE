@@ -3,6 +3,7 @@
 export(check_setup)
 export(eval_model)
 export(get_output_wts)
+export(get_top_phrases_quick)
 export(init_model)
 export(initialize)
 export(prep_data)

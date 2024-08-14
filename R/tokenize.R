@@ -60,7 +60,8 @@ tokenize <- function(x, embed_method = "default",
   # not to use them for now.
   xfmr <- reticulate::import("transformers")
   tknzr <- xfmr$AutoTokenizer$from_pretrained(model_name, use_fast = FALSE,
-                                              from_tf = TRUE)
+                                              from_tf = TRUE,
+                                              clean_up_tokenization_spaces = TRUE)
   tokens <- tknzr(x$text, padding = "max_length", truncation = TRUE,
                   max_length = as.integer(max_length), return_tensors = "pt")
   vocab <- tknzr$get_vocab()
