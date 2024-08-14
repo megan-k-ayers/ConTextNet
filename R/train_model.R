@@ -17,8 +17,9 @@ train_model <- function(inputs, run_quiet = FALSE) {
   ### global seed settings.
 
   ### Load model inputs if inputs is a path, then unpack them.
-  if (methods::is(inputs, "character")) inputs <- readRDS(inputs)
-  else if (!methods::is(inputs, "list")) {
+  if (methods::is(inputs, "character")) {
+    inputs <- readRDS(inputs)
+  } else if (!methods::is(inputs, "list")) {
     stop("The inputs variable must be passed as either a list or file path.")
   }
   train_inds <- which(inputs$dat$fold == "train")
@@ -49,7 +50,8 @@ train_model <- function(inputs, run_quiet = FALSE) {
     keras::fit(train_inputs, y_train, epochs = params$epochs,
                batch_size = params$batch_size,
                validation_split = 0.2,  # Using 20% of train set for validation.
-               class_weight = class_wts, callbacks = list(callback),
+               class_weight = class_wts,
+               callbacks = list(callback),
                verbose = verbose)
 
   return(model)

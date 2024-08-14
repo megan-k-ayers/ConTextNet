@@ -43,13 +43,13 @@ corr_regularizer <- function(weight, f) {
 cnn_mp_layer <- function(k, f, l_cnn, l_corr, input_layer) {
 
   kernel_reg <- keras::regularizer_l2(l_cnn)  # CNN kernel regularizer
-  activity_reg <- corr_regularizer(l_corr, f)  # Correlation regularizer
+  # activity_reg <- corr_regularizer(l_corr, f)  # Correlation regularizer
   conv1d_layer <- input_layer %>%  # 1D Convolutional layer
     keras::layer_conv_1d(filters = f,
                          kernel_size = k,
                          activation = "sigmoid",
                          kernel_regularizer = kernel_reg,
-                         activity_regularizer = activity_reg,
+                         # activity_regularizer = activity_reg,
                          name = paste0("conv1d_", k))
   pooling_layer <- conv1d_layer %>%  # Max pooled layer (within document)
     keras::layer_global_max_pooling_1d(name = paste0("max_pool_", k))
