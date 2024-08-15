@@ -14,7 +14,8 @@ prep_data(
   embed_method = "default",
   embed_instr = list(max_length = 200),
   tune_method = "none",
-  folder_name
+  folder_name,
+  folds = NULL
 )
 }
 \arguments{
@@ -51,19 +52,24 @@ with Slurm, generically via a shell script, or not at all
 ("local", "slurm", "shell", or "none")}
 
 \item{folder_name}{Name of directory to create for saving model files.}
+
+\item{folds}{Number of cross validation folds for tuning (default is NULL,
+must set to an integer if tune_method != "none").}
 }
 \description{
 Prepare data for ConTextNet model
 }
 \examples{
-model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
-                   "lr" = list(0.0001), "lambda_cnn" = list(0),
-                   "lambda_corr" = list(0), "lambda_out" = list(0),
-                   "epochs" = list(20), "batch_size" = list(32),
-                   "patience" = 15, "covars" = list(NULL))
+model_params <- list("n_filts" = list(4, 8),
+                     "kern_sizes" = list(c(3, 5), c(3), c(5)),
+                     "lr" = list(0.0001, 0.001),
+                     "lambda_cnn" = list(0, 0.0001),
+                     "lambda_corr" = 0, "lambda_out" = list(0, 0.0001),
+                     "epochs" = 100, "batch_size" = 32,
+                     "patience" = 20, "covars" = list(NULL))
 res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  model_params = model_params, task = "class",
-                 folder_name = "example")
+                 folder_name = "example", tune_method = "local", folds = 3)
 
 model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,

@@ -82,8 +82,9 @@ get_top_phrases_quick <- function(phrase_acts, tokens, params, vocab) {
 
   acts <- get_top_phrases(phrase_acts, tokens, params, vocab, m = 3)
   acts <- acts[, c("filter", "wt", "text")]
-  acts <- aggregate(acts$text, by = list(filters = acts$filter, wt = acts$wt),
-                    paste0, collapse = ", ")
+  acts <- stats::aggregate(acts$text,
+                           by = list(filters = acts$filter, wt = acts$wt),
+                           paste0, collapse = ", ")
   acts <- acts[order(abs(acts$wt), decreasing = TRUE), ]
 
   phrases <- paste(paste0(round(acts$wt[1:3], 3), ": [", acts$x[1:3], "]"), collapse = ", ")

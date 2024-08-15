@@ -4,7 +4,7 @@
 \alias{get_top_phrases_quick}
 \title{Get Quick Summary of Highest Activated Filters}
 \usage{
-get_top_phrases_quick(phrase_acts, tokens, params, vocab, m = 10)
+get_top_phrases_quick(phrase_acts, tokens, params, vocab)
 }
 \arguments{
 \item{phrase_acts}{Data frame with phrase activations from phrase_acts()}
@@ -15,8 +15,10 @@ get_top_phrases_quick(phrase_acts, tokens, params, vocab, m = 10)
 
 \item{vocab}{Named list, where values are token values and names are the
 corresponding text}
-
-\item{m}{Number of top phrases to pull per filter.}
+}
+\value{
+A string listing the top 3 phrases most highly associated with the
+top 4 convolutional filters with the highest output layer weight.
 }
 \description{
 Get Quick Summary of Highest Activated Filters

@@ -4,7 +4,17 @@
 \alias{create_grid}
 \title{Build parameter grid for tuning}
 \usage{
-create_grid()
+create_grid(model_params, K)
+}
+\arguments{
+\item{model_params}{List defining the parameter values to consider during
+tuning.}
+
+\item{K}{Number of folds (iterations) to train for each setting.}
+}
+\value{
+A tibble, where each row represents a different setting for model
+parameters.
 }
 \description{
 Build parameter grid for tuning

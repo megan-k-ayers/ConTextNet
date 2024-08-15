@@ -56,11 +56,40 @@ prep_params <- function(p, tune_method) {
 
 #' Build parameter grid for tuning
 #'
-#' @return
+#' @param model_params List defining the parameter values to consider during
+#'        tuning.
+#' @param K Number of folds (iterations) to train for each setting.
+#'
+#' @return A tibble, where each row represents a different setting for model
+#'         parameters.
 #'
 #' @examples
-create_grid <- function() {
-  return(1)
+create_grid <- function(model_params, K) {
+
+  grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
+                             "kern_sizes" = model_params$kern_sizes,
+                             "lr" = model_params$lr,
+                             "lambda_cnn" = model_params$lambda_cnn,
+                             "lambda_corr" = model_params$lambda_corr,
+                             "lambda_out" = model_params$lambda_out,
+                             "epochs" = model_params$epochs,
+                             "batch_size" = model_params$batch_size,
+                             "patience" = model_params$patience,
+                             "covars" = model_params$covars)
+  grid$id <- 1:nrow(grid)
+  grid <- do.call("rbind", replicate(K, grid, simplify = FALSE))
+  grid <- grid[order(grid$id), ]
+  grid$run <- rep(1:K, times = length(unique(grid$id)))
+  grid <- grid[, c("id", "run", setdiff(names(grid), c("id", "run")))]
+
+  # Add space to record performance metrics/information
+  grid$train_metric <- NA
+  grid$val_metric <- NA
+  grid$act_range <- NA  # Size of filter activation ranges
+  grid$max_corr <- NA   # Maximum corr between two filters' activations
+  grid$phrases <- NA    # Summary of top phrases for each filter
+
+  return(grid)
 }
 
 
@@ -90,19 +119,23 @@ create_grid <- function() {
 #'        with Slurm, generically via a shell script, or not at all
 #'        ("local", "slurm", "shell", or "none")
 #' @param folder_name Name of directory to create for saving model files.
+#' @param folds Number of cross validation folds for tuning (default is NULL,
+#'        must set to an integer if tune_method != "none").
 #'
 #' @return
 #' @export
 #'
 #' @examples
-#' model_params <- list("n_filts" = list(2), "kern_sizes" = list(c(3, 5)),
-#'                    "lr" = list(0.0001), "lambda_cnn" = list(0),
-#'                    "lambda_corr" = list(0), "lambda_out" = list(0),
-#'                    "epochs" = list(20), "batch_size" = list(32),
-#'                    "patience" = 15, "covars" = list(NULL))
+#' model_params <- list("n_filts" = list(4, 8),
+#'                      "kern_sizes" = list(c(3, 5), c(3), c(5)),
+#'                      "lr" = list(0.0001, 0.001),
+#'                      "lambda_cnn" = list(0, 0.0001),
+#'                      "lambda_corr" = 0, "lambda_out" = list(0, 0.0001),
+#'                      "epochs" = 100, "batch_size" = 32,
+#'                      "patience" = 20, "covars" = list(NULL))
 #' res <- prep_data(x = imdb, y_name = "y", text_name = "text",
 #'                  model_params = model_params, task = "class",
-#'                  folder_name = "example")
+#'                  folder_name = "example", tune_method = "local", folds = 3)
 #'
 #' model_params <- list("n_filts" = 2, "kern_sizes" = c(3, 5), "lr" = 0.0001,
 #'                    "lambda_cnn" = 0, "lambda_corr" = 0, "lambda_out" = 0,
@@ -121,7 +154,7 @@ create_grid <- function() {
 prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
                       embed_method = "default",
                       embed_instr = list("max_length" = 200),
-                      tune_method = "none", folder_name) {
+                      tune_method = "none", folder_name, folds = NULL) {
 
   ### Create directory for model files
 
@@ -158,7 +191,15 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   }
 
   ### Create parameter grid if tuning is happening
+  if (tune_method != "none") {
+    grid <- create_grid(model_params, K = folds)
 
+    # Define folds within the training set for tuning cross-validation
+    inds <- which(x$fold == "train")
+    x$tune_fold <- NA
+    x$tune_fold[inds] <- cut(seq(1, length(inds)), breaks = folds,
+                             labels = FALSE)
+  }
 
   ### Write shell script(s), whatever will be needed for running on the cluster,
   ### unless choosing to run locally.
@@ -173,7 +214,7 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
                 embed_method = embed_method,
                 embed_instr = embed_instr,
                 tune_method = tune_method,
-                grid = data.frame())
+                grid = grid)
 
   ### See if you can zip up the input list and the cluster scripts?
 
