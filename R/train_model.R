@@ -1,7 +1,8 @@
 #' Train a ConTextNet Model
 #'
-#' @param inputs Either a list that is the output of embed() or the path to a
-#'        an RDS file containing that list.
+#' @param dat Original text data set
+#' @param embeds Embeddings corresponding to dat$text
+#' @param params Model parameters
 #' @param run_quiet Logical indicating whether or not to show model training
 #'        progress in the console.
 #'
@@ -9,23 +10,16 @@
 #' @export
 #'
 #' @examples \dontrun{train_model(imdb_embed)}
-train_model <- function(inputs, run_quiet = FALSE) {
+train_model <- function(dat, embeds, params, run_quiet = FALSE) {
   ### TODO: Functions could use less generic names - something connected to
   ### the package?
   ### TODO: Write progress (reading data, class weights, etc.) to a log.
   ### TODO: Should be reproducible: figure out seed setting w/o altering user
   ### global seed settings.
 
-  ### Load model inputs if inputs is a path, then unpack them.
-  if (methods::is(inputs, "character")) {
-    inputs <- readRDS(inputs)
-  } else if (!methods::is(inputs, "list")) {
-    stop("The inputs variable must be passed as either a list or file path.")
-  }
-  train_inds <- which(inputs$dat$fold == "train")
-  x_train <- inputs$embeds[train_inds, , ]
-  y_train <- inputs$dat$y[train_inds]
-  params <- inputs$params
+  train_inds <- which(dat$fold == "train")
+  x_train <- embeds[train_inds, , ]
+  y_train <- dat$y[train_inds]
   cov_flag <- !is.null(params$covars)
 
   ### Calculate class weights for classification tasks.
@@ -35,7 +29,7 @@ train_model <- function(inputs, run_quiet = FALSE) {
   } else class_wts <- NULL
 
   ### Prep covariates as inputs, if using them.
-  if (cov_flag) c_train <- as.matrix(inputs$dat[train_inds, params$covars])
+  if (cov_flag) c_train <- as.matrix(dat[train_inds, params$covars])
   train_inputs <- if (cov_flag) list(x_train, c_train) else x_train
 
   ### Initialize the model.
@@ -95,6 +89,7 @@ eval_model <- function(model, input_dat, y, metrics) {
                                  value = MLmetrics::F1_Score(y, round(preds))))
   }
 
-  return(res)
+  return(as.data.frame(tidyr::pivot_wider(res, names_from = "metric",
+                                          values_from = "value")))
 
 }

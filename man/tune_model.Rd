@@ -2,18 +2,26 @@
 % Please edit documentation in R/tune_model.R
 \name{tune_model}
 \alias{tune_model}
-\title{Title}
+\title{Tune ConTextNet Model}
 \usage{
-tune_model(grid, inputs)
+tune_model(dat, embeds, meta_params, grid, tokens, vocab)
 }
 \arguments{
-\item{grid}{Grid of parameter settings from create_grid()}
+\item{dat}{Original text data set with outcome \code{y}}
 
-\item{inputs}{Model training inputs from embed()}
+\item{embeds}{Text embeddings for \code{dat$text}}
+
+\item{meta_params}{Meta-parameters for model training}
+
+\item{grid}{Grid of parameter settings to evaluate}
+
+\item{tokens}{Tokens for \code{dat$text}}
+
+\item{vocab}{Vocab map from tokenizer}
 }
 \value{
 Data frame, which is grid with model performances filled in.
 }
 \description{
-Title
+Tune ConTextNet Model
 }

@@ -59,12 +59,13 @@ prep_params <- function(p, tune_method) {
 #' @param model_params List defining the parameter values to consider during
 #'        tuning.
 #' @param K Number of folds (iterations) to train for each setting.
+#' @param task Whether this is "reg" (regression) or "class" (classification).
 #'
 #' @return A tibble, where each row represents a different setting for model
 #'         parameters.
 #'
 #' @examples
-create_grid <- function(model_params, K) {
+create_grid <- function(model_params, K, task) {
 
   grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
                              "kern_sizes" = model_params$kern_sizes,
@@ -83,8 +84,14 @@ create_grid <- function(model_params, K) {
   grid <- grid[, c("id", "run", setdiff(names(grid), c("id", "run")))]
 
   # Add space to record performance metrics/information
-  grid$train_metric <- NA
-  grid$val_metric <- NA
+  if (task == "class") {
+    grid$train_acc <- NA
+    grid$train_f1 <- NA
+    grid$val_acc <- NA
+    grid$val_f1 <- NA
+  }
+  grid$train_mse <- NA
+  grid$val_mse <- NA
   grid$act_range <- NA  # Size of filter activation ranges
   grid$max_corr <- NA   # Maximum corr between two filters' activations
   grid$phrases <- NA    # Summary of top phrases for each filter
@@ -162,13 +169,9 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
 
   ### Perform QA checks on data
 
-  ### Unique IDs to samples
-
   ### Tokenize the text, maintain unique IDs?
   token_res <- tokenize(x, embed_method = embed_method,
                         embed_instr = embed_instr)
-
-  ### Write token map (stays local)
 
   ### Train/test split
   ### TODO: Non-invasive set.seed here. And make it exact to test_prop. And
@@ -192,13 +195,13 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
 
   ### Create parameter grid if tuning is happening
   if (tune_method != "none") {
-    grid <- create_grid(model_params, K = folds)
+    grid <- create_grid(model_params = model_params, K = folds, task = task)
 
     # Define folds within the training set for tuning cross-validation
     inds <- which(x$fold == "train")
     x$tune_fold <- NA
-    x$tune_fold[inds] <- cut(seq(1, length(inds)), breaks = folds,
-                             labels = FALSE)
+    x$tune_fold[inds] <- sample(cut(seq(1, length(inds)), breaks = folds,
+                                    labels = FALSE))
   }
 
   ### Write shell script(s), whatever will be needed for running on the cluster,

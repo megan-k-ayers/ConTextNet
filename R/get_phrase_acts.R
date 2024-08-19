@@ -52,7 +52,7 @@ get_cnn_layer_acts <- function(model, input, k, n_filts, max_length) {
 #'         embeddings.
 #'
 #' @examples \dontrun{
-#' model <- train_model(imdb_embed)
+#' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
 #' embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
 #' dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]
 #' params <- imdb_embed$params

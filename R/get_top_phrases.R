@@ -32,7 +32,7 @@ get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
 #' @return Data frame with top phrases and their activations.
 #'
 #' @examples \dontrun{
-#' model <- train_model(imdb_embed)
+#' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
 #' tokens <- imdb_embed$tokens
 #' embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]
 #' dat <- imdb_embed$dat[imdb_embed$dat$fold == "train", ]

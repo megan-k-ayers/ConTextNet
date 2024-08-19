@@ -26,14 +26,16 @@ inputs <- prep_data(x = imdb_full, y_name = "y", text_name = "text",
 input_embeds <- embed(inputs)
 
 
+dat <- input_embeds$dat; embeds <- input_embeds$embeds
+meta_params <- input_embeds$params; grid <- input_embeds$grid;
+tokens <- input_embeds$tokens; vocab <- input_embeds$vocab
+
+tune_res <- tune_model(dat, embeds, meta_params, grid, tokens, vocab)
 
 
 
 
-
-
-
-model <- train_model(input_embeds)
+model <- train_model(input_embeds$dat, input_embeds$embeds, input_embeds$params)
 
 test_embeds <- input_embeds$embeds[input_embeds$dat$fold == "test", , ]
 test_y <- input_embeds$dat$y[input_embeds$dat$fold == "test"]

@@ -1,25 +1,36 @@
 #' Tune ConTextNet Model
 #'
-#' @param inputs Model training inputs from embed()
+#' @param dat Original text data set with outcome `y`
+#' @param embeds Text embeddings for `dat$text`
+#' @param meta_params Meta-parameters for model training
+#' @param grid Grid of parameter settings to evaluate
+#' @param tokens Tokens for `dat$text`
+#' @param vocab Vocab map from tokenizer
 #'
 #' @return Data frame, which is grid with model performances filled in.
 #' @export
 #'
 #' @examples
-tune_model <- function(inputs) {
+tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
   ### TODO: Incorporate tuning progress into future log system.
-  ### TODO: I don't like overwriting fold - change train_model to accept
-  ### embeds, dat, params directly instead.
+  ### TODO: Need to shuffle tune_fold, shouldn't be ordered.
+  ### TODO: Figure out if memory clearing is possible without adverse user-side
+  ### effects?
 
   # Only proceed with training data for tuning.
-  inputs$embeds <- inputs$embeds[inputs$dat$fold == "train", , ]
-  inputs$dat <- inputs$dat[inputs$dat$fold == "train", ]
-  inputs$dat$fold <- inputs$dat$tune_fold
+  embeds <- embeds[dat$fold == "train", , ]
+  tokens <- tokens[dat$fold == "train", ]
+  dat <- dat[dat$fold == "train", ]
+  temp_dat <- dat
 
-  grid <- inputs$grid
+  if (meta_params$task == "class") {
+    metrics <- c("accuracy", "f1", "mse")
+  } else metrics <- "mse"
 
-  # Loop through parameter settings in grid
+  # Loop through parameter settings in grid.
   for (i in 1:nrow(grid)) {
+
+    # Grab parameter settings for this grid row.
     these_params <- list("n_filts" = unlist(grid$n_filts[i]),
                          "kern_sizes" = unlist(grid$kern_sizes[i]),
                          "lr" = unlist(grid$lr[i]),
@@ -30,53 +41,56 @@ tune_model <- function(inputs) {
                          "batch_size" = unlist(grid$batch_size[i]),
                          "patience" = unlist(grid$patience[i]),
                          "covars" = unlist(grid$covars[i]))
-    inputs$params <- c(inputs$params, these_params)
-    inputs$dat$fold <- ifelse(inputs$dat$tune_fold == grid$run[i],
-                              "test", "train")
+    these_params <- c(meta_params, these_params)
 
-    model <- 1 ### TODO: Stopped here!
+    # Switch up test and train folds for cross-validation, train model.
+    temp_dat$fold <- ifelse(dat$tune_fold == grid$run[i], "test", "train")
+    model <- train_model(temp_dat, embeds, these_params, run_quiet = TRUE)
 
-      # model_res <- run(params, dat_train = dat_train, dat_val = dat_val,
-      #                  return_model = TRUE, return_acc = TRUE, run_quiet = TRUE,
-      #                  print_performance = FALSE, save_path = NULL)
-      #
-      # # Record model performance metrics
-      # this_res[f, c("train_metric", "val_metric")] <- c(model_res$train,
-      #                                                   model_res$val)
-      #
-      # # Also want to evaluate spread of the filter activations on the val samples,
-      # # and max correlation between max pooled activations for each filter.
-      # doc_act <- get_doc_acts(model = model_res$model, dat = dat_val,
-      #                         params = params)
-      # ranges <- paste(round(apply(doc_act, 2, function(i) max(i) - min(i)), 5),
-      #                 collapse = ", ")
-      # this_res[f, "max_pool_metric"] <- ranges
-      #
-      # corr <- cor(doc_act) - diag(nrow = ncol(doc_act))
-      # this_res[f, "max_filter_corr"] <- max(corr)
-      #
-      # # Record if this run returned NaN for the validation metric
-      # this_res[f, "num_nan"] <- as.integer(is.nan(model_res$val))
-      #
-      # # Free up memory (only partially successful, seems to be some amount of
-      # # memory that I can't get rid of...)
-      # rm(list = c("dat_train", "dat_val", "model_res", "doc_act"))
-      # k_clear_session()
-      # tf$keras$backend$clear_session()
-      # gc()
-    }
+    # Record performance metrics in grid.
+    if (meta_params$task == "class") {
+      cols <- c("train_mse", "train_acc", "train_f1")
+    } else cols <- "train_mse"
+    grid[i, cols] <- eval_model(model, embeds[temp_dat$fold == "train", , ],
+                                temp_dat$y[temp_dat$fold == "train"], metrics)
+    cols <- gsub("train", "val", cols)
+    grid[i, cols] <- eval_model(model, embeds[temp_dat$fold == "test", , ],
+                                temp_dat$y[temp_dat$fold == "test"], metrics)
 
-    # grid[i, c("train_metric", "val_metric")] <- c(mean(this_res$train_metric,
-    #                                                    na.rm = TRUE),
-    #                                               mean(this_res$val_metric,
-    #                                                    na.rm = TRUE))
-    # grid[i, "max_pool_metric"] <- paste(this_res$max_pool_metric, collapse = "|")
-    # grid[i, "max_filter_corr"] <- paste(this_res$max_filter_corr, collapse = "|")
-    # grid[i, "num_nan"] <- sum(this_res$num_nan, na.rm = TRUE)
 
-    # # Update saved file every intermediate 10 rows between start/end.
-    # if (i %% 10 == 0 & ! i %in% c(args$start_row, args$end_row)) {
-    #   write.csv(grid, paste0("param_tuning/", args$folder, "/grid.csv"))
-    # }
+    # Evaluate spread of the filter activations on the validation samples,
+    # record this in grid as well.
+    acts <- get_doc_acts(model = model, params = these_params,
+                         embeds = embeds[temp_dat$fold == "test", , ],
+                         dat = temp_dat[temp_dat$fold == "test", ])
+
+    ranges <- stats::aggregate(activation ~ filter, acts, range)
+    ranges <- round(ranges$activation[, 2] - ranges$activation[, 1], 3)
+    grid$act_range[i] <- paste(ranges, collapse = "|")
+
+    # Also record the max correlation between document-level filter activations.
+    acts <- tidyr::pivot_wider(acts[, c("filter", "activation", "sample_id")],
+                               names_from = "filter", id_cols = "sample_id",
+                               values_from = "activation")
+    acts <- acts[, 2:ncol(acts)]
+    grid$max_corr[i] <-  max(stats::cor(acts) - diag(nrow = ncol(acts)))
+
+    # Finally, return very short summary of filter interpretations on the
+    # validation set.
+    p_acts <- get_phrase_acts(model = model, params = these_params,
+                              embeds = embeds[temp_dat$fold == "test", , ])
+    grid$phrases[i] <- get_top_phrases_quick(phrase_acts = p_acts,
+                                             tokens = tokens,
+                                             params = these_params,
+                                             vocab = vocab)
+
+    # Free up memory (only partially successful in my past experience)
+    rm(list = c("p_acts", "acts", "model"))
+    keras::k_clear_session()
+    tf$keras$backend$clear_session()
+    gc()
+  }
+
+  return(grid)
 
 }

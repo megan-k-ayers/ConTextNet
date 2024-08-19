@@ -9,7 +9,7 @@
 #' @export
 #'
 #' @examples \dontrun{
-#' model <- train_model(imdb_embed)
+#' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
 #' params <- imdb_embed$params
 #' get_output_wts(model, params$kern_sizes, params$n_filts)
 #' }

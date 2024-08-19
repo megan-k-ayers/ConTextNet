@@ -4,11 +4,14 @@
 \alias{train_model}
 \title{Train a ConTextNet Model}
 \usage{
-train_model(inputs, run_quiet = FALSE)
+train_model(dat, embeds, params, run_quiet = FALSE)
 }
 \arguments{
-\item{inputs}{Either a list that is the output of embed() or the path to a
-an RDS file containing that list.}
+\item{dat}{Original text data set}
+
+\item{embeds}{Embeddings corresponding to dat$text}
+
+\item{params}{Model parameters}
 
 \item{run_quiet}{Logical indicating whether or not to show model training
 progress in the console.}
