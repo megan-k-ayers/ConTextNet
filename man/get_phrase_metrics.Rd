@@ -7,7 +7,11 @@
 get_phrase_metrics(model, params, embeds, tokens, vocab)
 }
 \arguments{
+\item{model}{Trained model}
+
 \item{params}{List of model parameters used in training \code{model}}
+
+\item{embeds}{Word embeddings}
 
 \item{tokens}{Data frame with tokens corresponding to \code{dat$text}}
 

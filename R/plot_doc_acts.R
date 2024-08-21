@@ -15,6 +15,8 @@
 #' plot_doc_acts(get_doc_acts(model, embeds, params, dat))
 #' }
 plot_doc_acts <- function(doc_acts) {
+  ### TODO: Add top 3 phrases in title? Definitely at least add output layer
+  ### weight.
 
   doc_acts$plot_col <- ifelse(doc_acts$wt > 0, "positive", "negative")
 

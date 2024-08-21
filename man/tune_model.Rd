@@ -7,7 +7,8 @@
 tune_model(dat, embeds, meta_params, grid, tokens, vocab)
 }
 \arguments{
-\item{dat}{Original text data set with outcome \code{y}}
+\item{dat}{Original text data set with outcome \code{y} (assumes full, will auto
+discard test set)}
 
 \item{embeds}{Text embeddings for \code{dat$text}}
 

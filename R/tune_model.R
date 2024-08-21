@@ -47,6 +47,8 @@ get_doc_metrics <- function(model, params, embeds, dat) {
 
 #' Tuning Wrapper for get_top_phrases_quick()
 #'
+#' @param embeds Word embeddings
+#' @param model Trained model
 #' @inheritParams get_top_phrases_quick
 #'
 #' @return Short summary of top phrases
@@ -59,9 +61,37 @@ get_phrase_metrics <- function(model, params, embeds, tokens, vocab) {
 }
 
 
+#' Get Performance Metrics During Parameter Tuning
+#'
+#' @param model Trained Keras model
+#' @param embeds Word embeddings
+#' @param dat Input text data and covariates and outcome
+#' @param metrics Metrics to get from eval_model
+#' @param fold Fold to assess
+#' @param covars Covariates for this model
+#'
+#' @return Performance metrics in a data frame row.
+#'
+#' @examples
+get_tune_metrics <- function(model, embeds, dat, metrics, fold, covars = NULL) {
+
+  if (!is.null(covars)) {  ## Covariate handling
+    covs <- as.matrix(dat[, covars])
+    res <- eval_model(model, list(embeds[dat$fold == fold, , ],
+                                  covs[dat$fold == fold, ]),
+                      dat$y[dat$fold == fold], metrics)
+  } else {
+    res <- eval_model(model, embeds[dat$fold == "train", , ],
+                      dat$y[dat$fold == "train"], metrics)
+  }
+  return(res)
+}
+
+
 #' Tune ConTextNet Model
 #'
-#' @param dat Original text data set with outcome `y`
+#' @param dat Original text data set with outcome `y` (assumes full, will auto
+#'        discard test set)
 #' @param embeds Text embeddings for `dat$text`
 #' @param meta_params Meta-parameters for model training
 #' @param grid Grid of parameter settings to evaluate
@@ -80,7 +110,7 @@ tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
   embeds <- embeds[dat$fold == "train", , ]
   tokens <- tokens[dat$fold == "train", ]
   dat <- dat[dat$fold == "train", ]
-  temp_dat <- dat
+  temp <- dat
 
   if (meta_params$task == "class") {
     metrics <- c("accuracy", "f1", "mse")
@@ -89,35 +119,42 @@ tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
   # Loop through parameter settings in grid.
   for (i in 1:nrow(grid)) {
 
+    ### TODO: Remove print statement and replace with logs!
+    print(paste0("Starting grid row ", i))
+
     # Grab parameter settings for this grid row.
     these_params <- c(meta_params, get_row_list(grid[i, ]))
 
     # Switch up test and train folds for cross-validation, train model.
-    temp_dat$fold <- ifelse(dat$tune_fold == grid$run[i], "test", "train")
-    model <- train_model(temp_dat, embeds, these_params, run_quiet = TRUE)
+    temp$fold <- ifelse(dat$tune_fold == grid$run[i], "test", "train")
+    model <- train_model(temp, embeds, these_params, run_quiet = TRUE)
 
     # Record performance metrics in grid.
-    if (meta_params$task == "class") {
+    if (meta_params$task == "class") {  # Add certain metrics for classifiers
       cols <- c("train_mse", "train_acc", "train_f1")
     } else cols <- "train_mse"
-    grid[i, cols] <- eval_model(model, embeds[temp_dat$fold == "train", , ],
-                                temp_dat$y[temp_dat$fold == "train"], metrics)
+    grid[i, cols] <- get_tune_metrics(model = model, embeds = embeds,
+                                      dat = temp, metrics = metrics,
+                                      fold = "train",
+                                      covars = these_params$covars)
     cols <- gsub("train", "val", cols)
-    grid[i, cols] <- eval_model(model, embeds[temp_dat$fold == "test", , ],
-                                temp_dat$y[temp_dat$fold == "test"], metrics)
+    grid[i, cols] <- get_tune_metrics(model = model, embeds = embeds,
+                                      dat = temp, metrics = metrics,
+                                      fold = "test",
+                                      covars = these_params$covars)
 
     # Record spread of the filter activations on the validation samples and
     # max correlation between document-level filter activations.
     grid[i, c("act_range", "max_corr")] <- get_doc_metrics(model = model,
                                    params = these_params,
-                                   embeds = embeds[temp_dat$fold == "test", , ],
-                                   dat = temp_dat[temp_dat$fold == "test", ])
+                                   embeds = embeds[temp$fold == "test", , ],
+                                   dat = temp[temp$fold == "test", ])
 
     # Finally, return very short summary of filter interpretations on the
     # validation set.
     grid$phrases[i] <- get_phrase_metrics(model = model, params = these_params,
-                                  embeds = embeds[temp_dat$fold == "test", , ],
-                                  tokens = tokens[temp_dat$fold == "test", ],
+                                  embeds = embeds[temp$fold == "test", , ],
+                                  tokens = tokens[temp$fold == "test", ],
                                   vocab = vocab)
 
     # Free up memory (only partially successful in my past experience)

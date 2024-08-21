@@ -187,10 +187,11 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   params$task <- task
 
   ### Scale covariate columns (if included)
-  if (!is.null(params$covars)) {  # Case without tuning
-    x <- scale(x[, params$covars])
+  if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
+    x[, params$covars] <- scale(x[, params$covars])
   } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
-    x <- scale(x[, unique(unlist(model_params$covars))])
+    covs <- unique(unlist(model_params$covars))
+    x[, covs] <- scale(x[, covs])
   }
 
   ### Create parameter grid if tuning is happening
