@@ -75,7 +75,7 @@ train_model <- function(dat, embeds, params, run_quiet = FALSE) {
 #' }
 eval_model <- function(model, input_dat, y, metrics) {
   ### TODO: Handle non-binary classification?
-  preds <- stats::predict(model, input_dat)
+  preds <- stats::predict(model, input_dat, verbose = 0)
   res <- data.frame(metric = character(), value = numeric())
   if ("mse" %in% metrics) {
     res <- rbind(res, data.frame(metric = "mse", value = mean((preds - y)^2)))

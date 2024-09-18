@@ -4,14 +4,12 @@
 \alias{get_output_wts}
 \title{Get Output Layer Weights}
 \usage{
-get_output_wts(model, kern_sizes, f)
+get_output_wts(model, params)
 }
 \arguments{
 \item{model}{Keras model with a final dense layer named "output"}
 
-\item{kern_sizes}{Array of convolutional layer kernel sizes in the model}
-
-\item{f}{Integer, number of filters per convolutional layer}
+\item{params}{Model parameters}
 }
 \value{
 Data frame with output layer weights corresponding to each

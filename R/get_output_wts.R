@@ -1,8 +1,7 @@
 #' Get Output Layer Weights
 #'
 #' @param model Keras model with a final dense layer named "output"
-#' @param kern_sizes Array of convolutional layer kernel sizes in the model
-#' @param f Integer, number of filters per convolutional layer
+#' @param params Model parameters
 #'
 #' @return Data frame with output layer weights corresponding to each
 #'         convolutional layer filter (and potentially covariates)
@@ -13,11 +12,19 @@
 #' params <- imdb_embed$params
 #' get_output_wts(model, params$kern_sizes, params$n_filts)
 #' }
-get_output_wts <- function(model, kern_sizes, f) {
+get_output_wts <- function(model, params) {
   ### TODO: Fix for when covariates are included.
   out_wts <- model$get_layer("output")$get_weights()[[1]]
-  filt_names <- as.character(sapply(kern_sizes, function(k) {
-    paste0("CNN", k, "_", "F", 1:f)}))
-  out_wts <- data.frame(filter = filt_names, wt = out_wts)
+  filt_names <- as.character(sapply(params$kern_sizes, function(k) {
+    paste0("CNN", k, "_", "F", 1:params$n_filts)}))
+
+  # Covariate handling
+  if (!is.null(params$covars)) {
+    out_wts <- data.frame(filter = c(filt_names, params$covars),
+                          wt = out_wts)
+  } else {
+    out_wts <- data.frame(filter = filt_names, wt = out_wts)
+  }
+
   return(out_wts)
 }

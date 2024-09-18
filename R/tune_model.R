@@ -54,8 +54,9 @@ get_doc_metrics <- function(model, params, embeds, dat) {
 #' @return Short summary of top phrases
 #'
 #' @examples
-get_phrase_metrics <- function(model, params, embeds, tokens, vocab) {
-  acts <- get_phrase_acts(model = model, params = params, embeds = embeds)
+get_phrase_metrics <- function(model, params, embeds, tokens, vocab, dat) {
+  acts <- get_phrase_acts(model = model, params = params, embeds = embeds,
+                          dat = dat)
   return(get_top_phrases_quick(phrase_acts = acts,  tokens = tokens,
                                params = params, vocab = vocab))
 }
@@ -155,7 +156,8 @@ tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
     grid$phrases[i] <- get_phrase_metrics(model = model, params = these_params,
                                   embeds = embeds[temp$fold == "test", , ],
                                   tokens = tokens[temp$fold == "test", ],
-                                  vocab = vocab)
+                                  vocab = vocab,
+                                  dat = temp[temp$fold == "test", ])
 
     # Free up memory (only partially successful in my past experience)
     rm(list = c("model"))

@@ -17,7 +17,7 @@ get_cnn_layer_acts <- function(model, input, k, n_filts, max_length) {
   this <- paste0("conv1d_", k)
   int_model <- model$input %>%
     keras::keras_model(outputs = model$get_layer(this)$output)
-  acts <- stats::predict(int_model, input)
+  acts <- stats::predict(int_model, input, verbose = 0)
 
   # Flatten by removing the token dimension (stack all tokens from the same
   # sample together). Keep track via phrase and sample IDs corresponding to
@@ -27,7 +27,8 @@ get_cnn_layer_acts <- function(model, input, k, n_filts, max_length) {
     d$phrase_id <- 1:nrow(d)
     return(d)})
   acts <- do.call(rbind, acts)
-  acts$sample_ind <- sort(rep(1:dim(input)[1], max_length - k + 1))
+  n <- if (is.list(input)) dim(input[[1]])[1] else dim(input)[1] # Covar case
+  acts$sample_ind <- sort(rep(1:n, max_length - k + 1))
 
   # Clean up formatting, names.
   acts <- as.data.frame(acts)
@@ -82,7 +83,7 @@ get_phrase_acts <- function(model, embeds, params, dat = NULL) {
   }
 
   ### Attach output layer weights associated with each filter.
-  out_wts <- get_output_wts(model, params$kern_sizes, params$n_filts)
+  out_wts <- get_output_wts(model, params)
   phrase_act <- merge(phrase_act, out_wts, by = "filter")
 
   ### Pull out kernel widths.

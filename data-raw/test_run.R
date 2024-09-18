@@ -17,7 +17,7 @@ imdb_full <- imdb_full[sample(1:nrow(imdb_full), n), ]
 
 # Create fake covariate(s) to test
 imdb_full$cov1 <- rnorm(n)
-imdb_full$cov2 <- rnorm(n, mean = imdb_full$y)
+imdb_full$cov2 <- rnorm(n, mean = imdb_full$y, sd = 0.25)
 
 model_params <- list("n_filts" = list(4, 8),
                      "kern_sizes" = list(c(3, 5)),
@@ -54,11 +54,14 @@ model <- train_model(input_embeds$dat, input_embeds$embeds, input_embeds$params)
 ### Assess the model and text treatments
 test_embeds <- input_embeds$embeds[input_embeds$dat$fold == "test", , ]
 test_y <- input_embeds$dat$y[input_embeds$dat$fold == "test"]
-eval_model(model, test_embeds, test_y, metrics = c("mse", "f1", "accuracy"))
+test_cov <- as.matrix(input_embeds$dat[input_embeds$dat$fold == "test",
+                                       input_embeds$params$covars])
+eval_model(model, list(test_embeds, test_cov), test_y, metrics = c("mse", "f1", "accuracy"))
 
-p_acts <- get_phrase_acts(model, test_embeds, input_embeds$params)
+p_acts <- get_phrase_acts(model, test_embeds, input_embeds$params,
+                          input_embeds$dat[input_embeds$dat$fold == "test", ])
 get_top_phrases(p_acts, input_embeds$tokens[input_embeds$dat$fold == "test", ],
-                input_embeds$params, input_embeds$vocab)
+                input_embeds$params, input_embeds$vocab, m = 5)
 get_top_phrases_quick(p_acts,
                       input_embeds$tokens[input_embeds$dat$fold == "test", ],
                       input_embeds$params, input_embeds$vocab)
