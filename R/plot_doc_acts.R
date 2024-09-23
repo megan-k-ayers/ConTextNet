@@ -6,10 +6,7 @@
 ### Priority:     Medium.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Add top 3 phrases in title? Definitely at least add output layer
-### weight.
-### TODO: Write tests.
-### TODO: Polish documentation.
+
 
 #' Plot Outcome vs. Document-Level Activations
 #'

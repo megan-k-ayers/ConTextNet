@@ -6,12 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  No.
 ###############################################################################
-### TODO: Incorporate tuning progress into future log system - replace print
-### statements with these.
-### TODO: Figure out if memory clearing is possible without adverse user-side
-### effects?
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Get Parameter List from Grid Row

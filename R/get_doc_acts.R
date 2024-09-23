@@ -7,8 +7,6 @@
 ### Priority:     Medium.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Get Document Level Filter Activation Data Frame

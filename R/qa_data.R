@@ -6,9 +6,6 @@
 ### Priority:     Low.
 ### User facing:  No.
 ###############################################################################
-### TODO: Write code for check_y(), check_text(), check_normed(), and qa_data().
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Check outcome column

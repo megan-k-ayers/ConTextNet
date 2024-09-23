@@ -6,20 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  No.
 ###############################################################################
-### TODO: Make clear to users that using default or name methods will result in
-### files being downloaded to their library.
-### TODO: Build out option of uploading existing tokens and error handling to
-### ensure type/shape/order if possible.
-### TODO: Figure out better reticulate import solution. Should this be in a
-### setup script that saves it as a global variable?
-### TODO: Save output in intermediate OUTPUT file which will get overwritten.
-### TODO: Have some text file which is a log of what has been completed
-### so far (ex. if we only get through embedding, we should know that, or if it
-### failed).
-### TODO: Include default embedding model as a saved file rather
-### than pulling it from Hugging Face.
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Get embeddings of texts

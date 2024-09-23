@@ -6,18 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  No.
 ###############################################################################
-### TODO: Make clear to users that using default or name methods will result in
-### files being downloaded to their library.
-### TODO: Build out option of uploading existing tokens and error handling to
-### ensure type/shape/order if possible, and that vocab is accessible.
-### TODO: Figure out better reticulate import solution. Should this be in a
-### setup script that saves it as a global variable?
-### TODO: Include default tokenizer model as a saved file rather
-### than pulling it from Hugging Face.
-### TODO: Keep in mind that vocab indexing starts from 0 with Python - write
-### tests designed to catch this.
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Tokenize input text

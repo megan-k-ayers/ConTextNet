@@ -6,20 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  Partially.
 ###############################################################################
-### TODO: Write create_model_dir() code.
-### TODO: For prep_data(): Non-invasive set.seed for sample splitting, and make
-### it exact to test_prop. Move this part to a helper function?
-### TODO: prep_data(): Fill out the remaining skeleton bits.
-### TODO: Write function to generate shell script/Slurm command for running
-### embedding and tuning on the cluster (start with tuning all at once).
-### TODO: Iterate on Cluster helpers, thinking about likely event where tuning
-### has to be stopped and restarted (job arrays).
-### TODO: For prep_params(): Error handling if user tries to specify parameters
-### for tuning using c() instead of list(). This assumes ~perfect behavior (user
-### gives sub-lists only if parameter tuning or passing single specification,
-### otherwise gives single specification directly.
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Create new directory for model files

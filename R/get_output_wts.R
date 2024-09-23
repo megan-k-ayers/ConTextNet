@@ -6,10 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Make naming of result clearer when covariates are included (will
-### have to fix downstream depends).
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Get Output Layer Weights

@@ -7,10 +7,6 @@
 ### Priority:     Medium.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Write tests.
-### TODO: Test get_phrase_acts() to check dimensions, order (by intermediately
-### modeling one)?
-### TODO: Polish documentation.
 
 
 #' Get Phrase Filter Activations (single layer)

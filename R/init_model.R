@@ -6,10 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  No.
 ###############################################################################
-### TODO: Write tests.
-### TODO: ^Write test/separate func to compare correlation in corr_regularizer()
-### to regular R cor(). Note that here we use /N, cor() uses /(N-1).
-### TODO: Polish documentation.
 
 
 #' Activation Correlation Regularizer

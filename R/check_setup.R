@@ -7,11 +7,7 @@
 ### Priority:     Low.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Figure out generalizing this to also work for running code on HPC.
-### TODO: Write check_setup() code.
-### TODO: Write initialize() code.
-### TODO: Write tests.
-### TODO: Polish documentation.
+### TODO: Check that this also works for running code on HPC once written.
 
 
 #' Check local python library setup

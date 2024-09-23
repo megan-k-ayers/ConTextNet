@@ -6,10 +6,7 @@
 ### Priority:     Medium.
 ### User facing:  Yes.
 ###############################################################################
-### TODO: Removed cleanup for Chinese for now, consider reintroducing later.
-### TODO: Faster loop for m = "all" option - parallel?
-### TODO: Write tests.
-### TODO: Polish documentation.
+
 
 #' Get Text Phrase from Document Tokens
 #'

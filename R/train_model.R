@@ -6,13 +6,6 @@
 ### Priority:     Medium.
 ### User facing:  No.
 ###############################################################################
-### TODO: Functions could use less generic names - something connected to
-### the package?
-### TODO: Write progress (reading data, class weights, etc.) to a log.
-### TODO: Should be reproducible: figure out seed setting w/o altering user
-### global seed settings. Or - tell users to set seed w/ Keras.
-### TODO: Write tests.
-### TODO: Polish documentation.
 
 
 #' Train a ConTextNet Model
