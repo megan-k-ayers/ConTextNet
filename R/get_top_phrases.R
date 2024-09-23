@@ -1,3 +1,16 @@
+###############################################################################
+###           GET TOP PHRASES THAT ACTIVATE ON EACH CONTEXTNET FILTER
+###
+### Runs:         Locally and on HPC cluster.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  Yes.
+###############################################################################
+### TODO: Removed cleanup for Chinese for now, consider reintroducing later.
+### TODO: Faster loop for m = "all" option - parallel?
+### TODO: Write tests.
+### TODO: Polish documentation.
+
 #' Get Text Phrase from Document Tokens
 #'
 #' Retrieve a phrase given the starting character within `doc_tokens`, the
@@ -14,7 +27,6 @@
 #' get_phrase(imdb_embed$tokens[1, ], 6, 4, imdb_embed$vocab)
 #' }
 get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
-  ### TODO: Should be an easy function to write tests for for my peace of mind.
   these_tokens <- doc_tokens[phrase_id:(phrase_id + k - 1)]
   return(paste(vocab[these_tokens + 1], collapse = " "))
 }
@@ -42,8 +54,6 @@ get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
 #' get_top_phrases(phrase_acts, tokens, params, vocab)
 #' }
 get_top_phrases <- function(phrase_acts, tokens, params, vocab, m = 10) {
-  ### TODO: Removing options for Chinese for now, consider reintroducing later.
-  ### TODO: Faster loop for m = "all" option - parallel?
 
   ### Retrieve phrases corresponding to the input embedding sequences.
   if (m == "all") {  # If we want to do this for all activations...

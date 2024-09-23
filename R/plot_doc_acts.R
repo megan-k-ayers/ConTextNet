@@ -1,3 +1,16 @@
+###############################################################################
+###                   VISUALIZE MAX-POOLED FILTER ACTIVATIONS
+###
+### Runs:         Locally.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  Yes.
+###############################################################################
+### TODO: Add top 3 phrases in title? Definitely at least add output layer
+### weight.
+### TODO: Write tests.
+### TODO: Polish documentation.
+
 #' Plot Outcome vs. Document-Level Activations
 #'
 #' @param doc_acts Data frame with document-level activations, the output of
@@ -15,8 +28,6 @@
 #' plot_doc_acts(get_doc_acts(model, embeds, params, dat))
 #' }
 plot_doc_acts <- function(doc_acts) {
-  ### TODO: Add top 3 phrases in title? Definitely at least add output layer
-  ### weight.
 
   doc_acts$plot_col <- ifelse(doc_acts$wt > 0, "positive", "negative")
 

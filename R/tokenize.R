@@ -1,3 +1,25 @@
+###############################################################################
+###                             TOKENIZE INPUT TEXT
+###
+### Runs:         Locally.
+### Status:       Core functionality complete.
+### Priority:     Medium.
+### User facing:  No.
+###############################################################################
+### TODO: Make clear to users that using default or name methods will result in
+### files being downloaded to their library.
+### TODO: Build out option of uploading existing tokens and error handling to
+### ensure type/shape/order if possible, and that vocab is accessible.
+### TODO: Figure out better reticulate import solution. Should this be in a
+### setup script that saves it as a global variable?
+### TODO: Include default tokenizer model as a saved file rather
+### than pulling it from Hugging Face.
+### TODO: Keep in mind that vocab indexing starts from 0 with Python - write
+### tests designed to catch this.
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Tokenize input text
 #'
 #' Input text is converted to tokens. This can be performed with one of the
@@ -31,19 +53,9 @@
 #' \dontrun{res <- tokenize(imdb)}
 tokenize <- function(x, embed_method = "default",
                      embed_instr = list("max_length" = 200)) {
-  ### TODO: Using default or name methods download files to the user's library
-  ### -- this should be made clear.
-  ### TODO: Keep in mind that vocab indexing starts from 0 with Python...
-  ### TODO: Figure out better reticulate import solution. Should this be in a
-  ### setup script that saves it as a global variable?
-  ### TODO: Include default tokenizer/embedding model as a saved file rather
-  ### than pulling it from Hugging Face.
 
   if (embed_method == "file") {
     stop("This functionality still needs to be developed.")
-
-    ### A potentially difficult part will be making sure the input matrix
-    ### gets turned into a tensor with the proper format.
     return(1)
   } else if (embed_method == "default") {
     model_name <- "prajjwal1/bert-tiny"

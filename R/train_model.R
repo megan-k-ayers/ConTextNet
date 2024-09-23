@@ -1,3 +1,20 @@
+###############################################################################
+###                            TRAIN CONTEXTNET MODEL
+###
+### Runs:         On HPC cluster.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  No.
+###############################################################################
+### TODO: Functions could use less generic names - something connected to
+### the package?
+### TODO: Write progress (reading data, class weights, etc.) to a log.
+### TODO: Should be reproducible: figure out seed setting w/o altering user
+### global seed settings. Or - tell users to set seed w/ Keras.
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Train a ConTextNet Model
 #'
 #' @param dat Original text data set
@@ -11,11 +28,6 @@
 #'
 #' @examples \dontrun{train_model(imdb_embed)}
 train_model <- function(dat, embeds, params, run_quiet = FALSE) {
-  ### TODO: Functions could use less generic names - something connected to
-  ### the package?
-  ### TODO: Write progress (reading data, class weights, etc.) to a log.
-  ### TODO: Should be reproducible: figure out seed setting w/o altering user
-  ### global seed settings.
 
   train_inds <- which(dat$fold == "train")
   x_train <- embeds[train_inds, , ]
@@ -74,7 +86,6 @@ train_model <- function(dat, embeds, params, run_quiet = FALSE) {
 #' eval_model(model, input_dat, y, metrics)
 #' }
 eval_model <- function(model, input_dat, y, metrics) {
-  ### TODO: Handle non-binary classification?
   preds <- stats::predict(model, input_dat, verbose = 0)
   res <- data.frame(metric = character(), value = numeric())
   if ("mse" %in% metrics) {

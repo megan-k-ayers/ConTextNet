@@ -1,3 +1,19 @@
+###############################################################################
+###                             TUNE CONTEXTNET MODEL
+###
+### Runs:         On HPC cluster.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  No.
+###############################################################################
+### TODO: Incorporate tuning progress into future log system - replace print
+### statements with these.
+### TODO: Figure out if memory clearing is possible without adverse user-side
+### effects?
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Get Parameter List from Grid Row
 #'
 #' @param grid_row Grid row of parameter settings to evaluate
@@ -103,9 +119,6 @@ get_tune_metrics <- function(model, embeds, dat, metrics, fold, covars = NULL) {
 #'
 #' @examples
 tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
-  ### TODO: Incorporate tuning progress into future log system.
-  ### TODO: Figure out if memory clearing is possible without adverse user-side
-  ### effects?
 
   # Only proceed with training data for tuning.
   embeds <- embeds[dat$fold == "train", , ]
@@ -120,7 +133,6 @@ tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
   # Loop through parameter settings in grid.
   for (i in 1:nrow(grid)) {
 
-    ### TODO: Remove print statement and replace with logs!
     print(paste0("Starting grid row ", i))
 
     # Grab parameter settings for this grid row.

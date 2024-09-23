@@ -1,3 +1,27 @@
+###############################################################################
+###                            EMBED INPUT TOKENS
+###
+### Runs:         On HPC cluster.
+### Status:       Core functionality complete.
+### Priority:     Medium.
+### User facing:  No.
+###############################################################################
+### TODO: Make clear to users that using default or name methods will result in
+### files being downloaded to their library.
+### TODO: Build out option of uploading existing tokens and error handling to
+### ensure type/shape/order if possible.
+### TODO: Figure out better reticulate import solution. Should this be in a
+### setup script that saves it as a global variable?
+### TODO: Save output in intermediate OUTPUT file which will get overwritten.
+### TODO: Have some text file which is a log of what has been completed
+### so far (ex. if we only get through embedding, we should know that, or if it
+### failed).
+### TODO: Include default embedding model as a saved file rather
+### than pulling it from Hugging Face.
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Get embeddings of texts
 #'
 #' @param input_list This should be an output of prep_data().
@@ -10,8 +34,7 @@
 #' res <- embed(imdb_input_list)
 #' }
 embed <- function(input_list) {
-  ### TODO: Figure out better reticulate import solution. Should this be in a
-  ### setup script that saves it as a global variable?
+
   if (input_list$embed_method != "file") {
     if (input_list$embed_method == "default") {
       model_name <- "prajjwal1/bert-tiny"
@@ -36,9 +59,7 @@ embed <- function(input_list) {
   } else {
     stop("This functionality still needs to be developed.")
   }
-  ### TODO: Save in intermediate OUTPUT file which will get overwritten later.
-  ### TODO: Have some text file which is a log of what has been completed
-  ### so far. Would be useful especially when things get left on the cluster.
+
   input_list$embeds <- embeds
   return(input_list)
 }

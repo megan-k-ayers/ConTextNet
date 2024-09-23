@@ -1,3 +1,16 @@
+###############################################################################
+###                   GET MAX POOLED FILTER ACTIVATIONS FROM
+###                   TRAINED CONTEXTNET MODEL + INPUT DATA
+###
+### Runs:         Locally and on HPC cluster.
+### Status:       Almost complete - only tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  Yes.
+###############################################################################
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Get Document Level Filter Activation Data Frame
 #'
 #' @param model R Keras trained model

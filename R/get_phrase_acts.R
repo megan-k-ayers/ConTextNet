@@ -1,3 +1,18 @@
+###############################################################################
+###                        GET FILTER ACTIVATIONS FROM
+###                   TRAINED CONTEXTNET MODEL + INPUT DATA
+###
+### Runs:         Locally and on HPC cluster.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  Yes.
+###############################################################################
+### TODO: Write tests.
+### TODO: Test get_phrase_acts() to check dimensions, order (by intermediately
+### modeling one)?
+### TODO: Polish documentation.
+
+
 #' Get Phrase Filter Activations (single layer)
 #'
 #' @param model R Keras trained model
@@ -60,7 +75,6 @@ get_cnn_layer_acts <- function(model, input, k, n_filts, max_length) {
 #' res <- get_phrase_acts(model, embeds, params, dat)
 #' }
 get_phrase_acts <- function(model, embeds, params, dat = NULL) {
-  ### TODO: Test function to check dimensions, order (by intermed modeling one)?
 
   ### Unpack frequently used parameters.
   kern_sizes <- params$kern_sizes

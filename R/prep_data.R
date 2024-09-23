@@ -1,6 +1,30 @@
+###############################################################################
+###            PREPARE INPUT DATA FOR MODEL TRAINING AND ASSESSMENT.
+###
+### Runs:         Locally.
+### Status:       Core functionality complete.
+### Priority:     Medium.
+### User facing:  Partially.
+###############################################################################
+### TODO: Write create_model_dir() code.
+### TODO: For prep_data(): Non-invasive set.seed for sample splitting, and make
+### it exact to test_prop. Move this part to a helper function?
+### TODO: prep_data(): Fill out the remaining skeleton bits.
+### TODO: Write function to generate shell script/Slurm command for running
+### embedding and tuning on the cluster (start with tuning all at once).
+### TODO: Iterate on Cluster helpers, thinking about likely event where tuning
+### has to be stopped and restarted (job arrays).
+### TODO: For prep_params(): Error handling if user tries to specify parameters
+### for tuning using c() instead of list(). This assumes ~perfect behavior (user
+### gives sub-lists only if parameter tuning or passing single specification,
+### otherwise gives single specification directly.
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Create new directory for model files
 #'
-#' This directory will contain the following subdirectories
+#' This directory will contain the following sub directories...
 #'
 #' @param name Name to give the directory for this model
 #'
@@ -20,7 +44,8 @@ create_model_dir <- function(name) {
 
 
 #' Create a list to store model parameters (meta-params and final model params)
-#'
+#' Handles parameter setting, with different cases for parameter tuning and
+#' direct specification (tuning = "none").
 #' @param p A list, model_params, passed to prep_data().
 #' @param tune_method How tuning should be performed: locally, via a Cluster
 #'        with Slurm, generically via a shell script, or not at all
@@ -30,25 +55,20 @@ create_model_dir <- function(name) {
 #'
 #' @examples
 prep_params <- function(p, tune_method) {
-  ### Handle parameters, with different cases for parameter tuning and direct
-  ### specification (tuning = "none").
-  ### TODO: Handling if user tries to specify parameters for tuning using c()
-  ### instead of list(). This assumes ~perfect behavior (user gives sub-lists
-  ### only if parameter tuning or passing single specification, otherwise gives
-  ### specification single directly.
+
   list_flag <- any(sapply(p, methods::is, class2 = "list"))
-  if (list_flag) {
+  if (list_flag) {  # If any list item is a list, check that its items vary.
     single_spec_flag <- identical(unique(sapply(p, length)), as.integer(1))
-  } else single_spec_flag <- TRUE
+  } else single_spec_flag <- TRUE  # Otherwise we have a single specification.
 
   if (single_spec_flag) {
-    if (list_flag) {  # Case with single specification but sub-lists
+    if (list_flag) {  # Case with single specification but sub-lists --> unlist.
       params <- lapply(p, unlist)
-    } else params <- p  # Case with single specification
+    } else params <- p  # Case with single specification --> use as is.
   } else if (tune_method == "none") {  # Case with no tuning but >1 setting
     stop("Parameter settings are ill-specified - please review them.")
   } else {  # Case with tuning and >1 setting
-    params <- list()
+    params <- list()  # Leave empty - will get only meta-params, others in grid.
   }
   return(params)
 }
@@ -174,8 +194,6 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
                         embed_instr = embed_instr)
 
   ### Train/test split
-  ### TODO: Non-invasive set.seed here. And make it exact to test_prop. And
-  ### move to a helper function?
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
 

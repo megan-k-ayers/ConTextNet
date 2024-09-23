@@ -1,3 +1,17 @@
+###############################################################################
+###            GET FINAL LAYER WEIGHTS FROM TRAINED CONTEXTNET MODEL
+###
+### Runs:         Locally and on HPC cluster.
+### Status:       Almost complete - mainly tests and documentation remaining.
+### Priority:     Medium.
+### User facing:  Yes.
+###############################################################################
+### TODO: Make naming of result clearer when covariates are included (will
+### have to fix downstream depends).
+### TODO: Write tests.
+### TODO: Polish documentation.
+
+
 #' Get Output Layer Weights
 #'
 #' @param model Keras model with a final dense layer named "output"
@@ -13,7 +27,6 @@
 #' get_output_wts(model, params$kern_sizes, params$n_filts)
 #' }
 get_output_wts <- function(model, params) {
-  ### TODO: Fix for when covariates are included.
   out_wts <- model$get_layer("output")$get_weights()[[1]]
   filt_names <- as.character(sapply(params$kern_sizes, function(k) {
     paste0("CNN", k, "_", "F", 1:params$n_filts)}))
