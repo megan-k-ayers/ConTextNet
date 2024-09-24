@@ -12,7 +12,7 @@ tensorflow::set_random_seed(123)
 
 ### Setup
 # Sub-sample of IMDB
-n <- 5000
+n <- 50
 imdb_full <- read.csv("data-raw/imdb_full.csv")
 imdb_full <- imdb_full[sample(1:nrow(imdb_full), n), ]
 
@@ -63,8 +63,8 @@ model <- train_model(dat, embeds, best_params)
 ### Assess the model quantitatively on the test set.
 test_embeds <- embeds[dat$fold == "test", , ]
 test_y <- dat$y[dat$fold == "test"]
-test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
-eval_model(model, list(test_embeds, test_cov), test_y,
+# test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
+eval_model(model, list(test_embeds), test_y,
            metrics = c("mse", "f1", "accuracy"))
 
 ### Basic interpretation

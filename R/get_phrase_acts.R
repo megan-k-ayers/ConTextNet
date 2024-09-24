@@ -94,7 +94,8 @@ get_phrase_acts <- function(model, embeds, params, dat = NULL) {
 
   ### Attach output layer weights associated with each filter.
   out_wts <- get_output_wts(model, params)
-  phrase_act <- merge(phrase_act, out_wts, by = "filter")
+  out_wts <- out_wts[grepl("^CNN", out_wts$feature), ]
+  phrase_act <- merge(phrase_act, out_wts, by.x = "filter", by.y = "feature")
 
   ### Pull out kernel widths.
   phrase_act$k <- as.numeric(gsub("CNN([0-9]+)_F[0-9]+", "\\1", phrase_act$filter))
