@@ -62,7 +62,8 @@ get_doc_acts <- function(model, embeds, params, dat) {
 
   ### Attach output layer weights associated with each filter and the label.
   out_wts <- get_output_wts(model, params)
-  acts <- merge(acts, out_wts, by = "filter")
+  out_wts <- out_wts[grepl("^CNN", out_wts$feature), ]
+  acts <- merge(acts, out_wts, by.x = "filter", by.y = "feature")
 
   dat$sample_id <- 1:nrow(dat)
   acts <- merge(acts, dat, by = "sample_id")

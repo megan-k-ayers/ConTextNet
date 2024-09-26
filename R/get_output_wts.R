@@ -20,7 +20,7 @@
 #' @examples \dontrun{
 #' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
 #' params <- imdb_embed$params
-#' get_output_wts(model, params$kern_sizes, params$n_filts)
+#' get_output_wts(model, params)
 #' }
 get_output_wts <- function(model, params) {
   out_wts <- model$get_layer("output")$get_weights()[[1]]
@@ -29,10 +29,10 @@ get_output_wts <- function(model, params) {
 
   # Covariate handling
   if (!is.null(params$covars)) {
-    out_wts <- data.frame(filter = c(filt_names, params$covars),
+    out_wts <- data.frame(feature = c(filt_names, params$covars),
                           wt = out_wts)
   } else {
-    out_wts <- data.frame(filter = filt_names, wt = out_wts)
+    out_wts <- data.frame(feature = filt_names, wt = out_wts)
   }
 
   return(out_wts)
