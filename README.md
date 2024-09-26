@@ -7,9 +7,10 @@
 <!-- badges: end -->
 
 The goal of ConTextNet is to discover influential text features from a
-corpus, given an outcome of interest. These text features can be used to
-estimate causal effects on the outcome using a generalization of the
-framework presented in Fong & Grimmer (2016, 2021), or can be viewed as
+corpus given an outcome of interest, according to the methodology
+presented in Ayers et al. ([2024](https://aclanthology.org/2024.findings-acl.714/)).
+These text features can be used to estimate causal effects on the outcome
+(Fong & Grimmer 2016, 2021), or can be viewed as
 exploratory evidence to guide confirmatory analyses where researchers
 design a small number of treatment texts. To do this, ConTextNet walks
 users through building, training, tuning, and interpreting a neural
@@ -21,9 +22,9 @@ documentation and helper functions to guide users through the necessary
 Python dependency installations and to streamline interactions with
 common HPC interfaces.
 
-## Installation
+<!-- ## Installation
 
-You can install the development version of ConTextNet like so:
+You can install the development version of ConTextNet like so: -->
 
 <!-- ``` r -->
 <!-- # FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE? -->
