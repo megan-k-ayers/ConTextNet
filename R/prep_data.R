@@ -190,9 +190,13 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   params$folder <- folder_name
   params$task <- task
 
-  ### Scale outcome variable using training data, record mean and variance
-  ### for reference.
-
+  ### Scale covariate columns (if included)
+  if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
+    x[, params$covars] <- scale(x[, params$covars])
+  } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
+    covs <- unique(unlist(model_params$covars))
+    x[, covs] <- scale(x[, covs])
+  }
 
   ### Create parameter grid if tuning is happening
   if (tune_method != "none") {

@@ -10,41 +10,15 @@ load_all()
 set.seed(123)
 tensorflow::set_random_seed(123)
 
-### Basic example just to check how Keras normalization layers work.
-adapt_data <-  matrix(c(0, 7, 4, 2, 9, 6, 0, 7, 4, 2, 9, 6), nrow = 4,
-                      byrow = TRUE)
-input_data <- c(1, 2, 3)
-# Forward:
-layer <- keras::keras$layers$Normalization(axis = as.integer(-1))
-layer$adapt(adapt_data)
-layer(input_data)$numpy()
-
-apply(adapt_data, 2, mean)      # Checking
-apply(adapt_data, 2, var)*3/4
-
-# Backward:
-output_data <- c(0, -6, -2)
-rev_layer <- keras::keras$layers$Normalization(axis = as.integer(-1),
-                                               invert = TRUE)
-rev_layer$adapt(adapt_data)
-rev_layer(output_data)  # Back to the original, if we need it.
-
-rm(list = ls())
-
-#################################################################
-
-
 ### Setup
 # Sub-sample of IMDB
 n <- 50
 imdb_full <- read.csv("data-raw/imdb_full.csv")
 imdb_full <- imdb_full[sample(1:nrow(imdb_full), n), ]
 
-# Create fake covariate(s) to test, and pretend we have a continuous outcome
-# that all need scaling.
-imdb_full$y <- rnorm(n, mean = 50)
-imdb_full$cov1 <- rnorm(n, mean = 100)
-imdb_full$cov2 <- rnorm(n, mean = imdb_full$y + 10, sd = 0.25)
+# Create fake covariate(s) to test
+imdb_full$cov1 <- rnorm(n)
+imdb_full$cov2 <- rnorm(n, mean = imdb_full$y, sd = 0.25)
 
 model_params <- list("n_filts" = list(8),
                      "kern_sizes" = list(5),
@@ -62,33 +36,26 @@ inputs <- prep_data(x = imdb_full, y_name = "y", text_name = "text",
                     embed_instr = list(max_length = 100), folds = 3)
 input_embeds <- embed(inputs)
 
-# # Checking that embeddings are already ~ normalized.
-# embeds_check <- matrix(input_embeds$embeds, 50*100, 128)
-# hist(apply(embeds_check, 2, mean))
-# hist(apply(embeds_check, 2, sd))
-
 ### Run parameter tuning, take best ones w.r.t. validation MSE
 dat <- input_embeds$dat; embeds <- input_embeds$embeds
 meta_params <- input_embeds$params; grid <- input_embeds$grid;
 tokens <- input_embeds$tokens; vocab <- input_embeds$vocab
 
-# tune_res <- tune_model(dat, embeds, meta_params, grid, tokens, vocab)
-#
-# # Aggregating over runs of the same setting.
-# tune_res$act_range_avg <- apply(do.call(rbind, strsplit(tune_res$act_range, "|",
-#                                                         fixed = TRUE)),
-#                                 1, function(a) mean(as.numeric(a)))
-# quant_cols <- grep("train|val|max_corr|avg", names(tune_res), value = TRUE)
-# tune_res_agg <- tune_res %>%
-#   group_by(id) %>%
-#   summarise(across(all_of(quant_cols), ~ mean(.x, na.rm = TRUE)),
-#             id = unique(id))
-# tune_res_agg <- tune_res_agg[order(tune_res_agg$val_mse), ]
-#
-# best_params <- c(meta_params, get_row_list(tune_res[tune_res_agg$id[1], ]))
-# input_embeds$params <- best_params
+tune_res <- tune_model(dat, embeds, meta_params, grid, tokens, vocab)
 
-best_params <- c(meta_params, get_row_list(grid[9, ]))
+# Aggregating over runs of the same setting.
+tune_res$act_range_avg <- apply(do.call(rbind, strsplit(tune_res$act_range, "|",
+                                                        fixed = TRUE)),
+                                1, function(a) mean(as.numeric(a)))
+quant_cols <- grep("train|val|max_corr|avg", names(tune_res), value = TRUE)
+tune_res_agg <- tune_res %>%
+  group_by(id) %>%
+  summarise(across(all_of(quant_cols), ~ mean(.x, na.rm = TRUE)),
+            id = unique(id))
+tune_res_agg <- tune_res_agg[order(tune_res_agg$val_mse), ]
+
+best_params <- c(meta_params, get_row_list(tune_res[tune_res_agg$id[1], ]))
+input_embeds$params <- best_params
 
 ### Train final model with the "best" parameters
 model <- train_model(dat, embeds, best_params)

@@ -83,9 +83,6 @@ cnn_mp_layer <- function(k, f, l_cnn, l_corr, input_layer) {
 #'
 #' @param params List of model parameters - from tune_prep() or directly from
 #'        data_prep().
-#' @param train_dat Embedding *training* data set, as a list also including
-#'        covariates as second element if they are used.  Used to set
-#'        normalization layers.
 #'
 #' @return A compiled keras model.
 #' @export
@@ -94,7 +91,7 @@ cnn_mp_layer <- function(k, f, l_cnn, l_corr, input_layer) {
 #' \dontrun{
 #' init_model(imdb_embed$params)
 #' }
-init_model <- function(params, train_dat) {
+init_model <- function(params) {
 
   ### Create input layer.
   input <- keras::layer_input(shape = list(params$n_tokens, params$embed_dim),
@@ -105,16 +102,7 @@ init_model <- function(params, train_dat) {
     input_covars <- keras::layer_input(shape = length(params$covars),
                                        name = "covars")
     train_input <- list(input, input_covars)
-
-    # Normalize covariates - use training data to adapt the normalization
-    # layer.
-    normed_covars <- tf$keras$layers$Normalization(axis = as.integer(-1),
-                                                   trainable = FALSE)
-    normed_covars$adapt(as.matrix(train_dat[[2]]))
-    normed_covars <- normed_covars(input_covars)
-
   } else train_input <- input
-
 
   ### Create 1D CNN layers and corresponding max pooled layers - one per
   ### kern_sizes given in params.
@@ -126,7 +114,7 @@ init_model <- function(params, train_dat) {
   ### Concatenate max pooled layers from multiple CNN layers together with
   ### covariates, if given.
   if (!is.null(params$covars)) {
-    conv_layers <- c(conv_layers, normed_covars)
+    conv_layers <- c(conv_layers, input_covars)
     concat_cnns <- tf$keras$layers$Concatenate()(unname(conv_layers))
   } else if (length(params$kern_sizes) > 1) {
     concat_cnns <- tf$keras$layers$Concatenate()(unname(conv_layers))

@@ -38,7 +38,7 @@ train_model <- function(dat, embeds, params, run_quiet = FALSE) {
   train_inputs <- if (cov_flag) list(x_train, c_train) else x_train
 
   ### Initialize the model.
-  model <- init_model(params, train_inputs)
+  model <- init_model(params)
 
   ### Train the model with early stopping.
   callback = tf$keras$callbacks$EarlyStopping(monitor = 'val_loss',
