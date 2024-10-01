@@ -11,14 +11,16 @@ set.seed(123)
 tensorflow::set_random_seed(123)
 
 ### Setup
-# Sub-sample of IMDB
 n <- 50
-imdb_full <- read.csv("data-raw/imdb_full.csv")
-imdb_full <- imdb_full[sample(1:nrow(imdb_full), n), ]
+# x <- read.csv("data-raw/imdb_full.csv")
+x <- read.csv("data-raw/beer_reviews_cleaned.csv")[, c("text", "taste_score")]
+names(x) <- c("text", "y")
+x <- x[sample(1:nrow(x), n), ]
 
 # Create fake covariate(s) to test
-imdb_full$cov1 <- rnorm(n)
-imdb_full$cov2 <- rnorm(n, mean = imdb_full$y, sd = 0.25)
+x$cov1 <- rnorm(n)
+x$cov2 <- rnorm(n, mean = x$y, sd = 0.4)
+
 
 model_params <- list("n_filts" = list(8),
                      "kern_sizes" = list(5),
@@ -30,8 +32,8 @@ model_params <- list("n_filts" = list(8),
                      "covars" = list(NULL, "cov1", "cov2"))
 
 ### Prep and embed
-inputs <- prep_data(x = imdb_full, y_name = "y", text_name = "text",
-                    model_params = model_params, task = "class",
+inputs <- prep_data(x = x, y_name = "y", text_name = "text",
+                    model_params = model_params, task = "reg",
                     folder_name = "example", tune_method = "local",
                     embed_instr = list(max_length = 100), folds = 3)
 input_embeds <- embed(inputs)
@@ -64,8 +66,10 @@ model <- train_model(dat, embeds, best_params)
 test_embeds <- embeds[dat$fold == "test", , ]
 test_y <- dat$y[dat$fold == "test"]
 # test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
+# eval_model(model, list(test_embeds), test_y,
+#            metrics = c("mse", "f1", "accuracy"))
 eval_model(model, list(test_embeds), test_y,
-           metrics = c("mse", "f1", "accuracy"))
+           metrics = c("mse"))
 
 ### Basic interpretation
 p_acts <- get_phrase_acts(model, test_embeds, best_params,
