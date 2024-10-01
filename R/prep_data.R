@@ -29,6 +29,25 @@ create_model_dir <- function(name) {
 }
 
 
+#' Scale covariates to have mean-zero and standard deviation of 1 using training
+#' data.
+#'
+#' @param dat The input data set. Should include a `fold` column with `train`
+#'        and `test` entries.
+#' @param covs Names of the columns to scale.
+#'
+#' @return The same data frame, but with the `covs` columns scaled.
+#' @export
+#'
+#' @examples
+scale_covars <- function(dat, covs) {
+  means <- apply(dat[dat$fold == "train", covs], 2, mean)
+  stdevs <- apply(dat[dat$fold == "train", covs], 2, sd)
+  dat[, covs] <- sweep(sweep(dat[, covs], 2, means), 2, stdevs, "/")
+  return(dat)
+}
+
+
 #' Create a list to store model parameters (meta-params and final model params)
 #' Handles parameter setting, with different cases for parameter tuning and
 #' direct specification (tuning = "none").
@@ -175,6 +194,11 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
 
   ### Perform QA checks on data
 
+  ### Error handling for task setting.
+  if (task == "class" & length(unique(x$y)) > 2) {
+    stop("Task is set to classification but more than 2 classes detected.")
+  }
+
   ### Tokenize the text, maintain unique IDs?
   token_res <- tokenize(x, embed_method = embed_method,
                         embed_instr = embed_instr)
@@ -190,12 +214,17 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   params$folder <- folder_name
   params$task <- task
 
-  ### Scale covariate columns (if included)
+  ### Scale covariate columns (if included). The `scale_covars` function
+  ### scales both the training and test sets using only the training data.
   if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
-    x[, params$covars] <- scale(x[, params$covars])
+    x <- scale_covars(x, params$covars)
   } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
-    covs <- unique(unlist(model_params$covars))
-    x[, covs] <- scale(x[, covs])
+    x <- scale_covars(x, unique(unlist(model_params$covars)))
+  }
+
+  ### Similarly, scale the outcome if it is continuous.
+  if (task == "reg") {
+    x$y <- (x$y - mean(x$y[x$fold == "train"])) / sd(x$y[x$fold == "train"])
   }
 
   ### Create parameter grid if tuning is happening
