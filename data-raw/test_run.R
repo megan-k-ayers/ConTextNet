@@ -16,7 +16,11 @@ n <- 50
 imdb_full <- read.csv("data-raw/imdb_full.csv")
 imdb_full <- imdb_full[sample(1:nrow(imdb_full), n), ]
 
-# Create fake covariate(s) to test
+# Create fake covariate(s) to test, and pretend we have a continuous outcome
+# that all need scaling.
+imdb_full$y <- rnorm(n, mean = 50)
+imdb_full$cov1 <- rnorm(n, mean = 100)
+imdb_full$cov2 <- rnorm(n, mean = imdb_full$y + 10, sd = 0.25)
 imdb_full$cov1 <- rnorm(n)
 imdb_full$cov2 <- rnorm(n, mean = imdb_full$y, sd = 0.25)
 
@@ -31,7 +35,7 @@ model_params <- list("n_filts" = list(8),
 
 ### Prep and embed
 inputs <- prep_data(x = imdb_full, y_name = "y", text_name = "text",
-                    model_params = model_params, task = "class",
+                    model_params = model_params, task = "reg",
                     folder_name = "example", tune_method = "local",
                     embed_instr = list(max_length = 100), folds = 3)
 input_embeds <- embed(inputs)
@@ -41,21 +45,23 @@ dat <- input_embeds$dat; embeds <- input_embeds$embeds
 meta_params <- input_embeds$params; grid <- input_embeds$grid;
 tokens <- input_embeds$tokens; vocab <- input_embeds$vocab
 
-tune_res <- tune_model(dat, embeds, meta_params, grid, tokens, vocab)
+# tune_res <- tune_model(dat, embeds, meta_params, grid, tokens, vocab)
+#
+# # Aggregating over runs of the same setting.
+# tune_res$act_range_avg <- apply(do.call(rbind, strsplit(tune_res$act_range, "|",
+#                                                         fixed = TRUE)),
+#                                 1, function(a) mean(as.numeric(a)))
+# quant_cols <- grep("train|val|max_corr|avg", names(tune_res), value = TRUE)
+# tune_res_agg <- tune_res %>%
+#   group_by(id) %>%
+#   summarise(across(all_of(quant_cols), ~ mean(.x, na.rm = TRUE)),
+#             id = unique(id))
+# tune_res_agg <- tune_res_agg[order(tune_res_agg$val_mse), ]
+#
+# best_params <- c(meta_params, get_row_list(tune_res[tune_res_agg$id[1], ]))
+# input_embeds$params <- best_params
 
-# Aggregating over runs of the same setting.
-tune_res$act_range_avg <- apply(do.call(rbind, strsplit(tune_res$act_range, "|",
-                                                        fixed = TRUE)),
-                                1, function(a) mean(as.numeric(a)))
-quant_cols <- grep("train|val|max_corr|avg", names(tune_res), value = TRUE)
-tune_res_agg <- tune_res %>%
-  group_by(id) %>%
-  summarise(across(all_of(quant_cols), ~ mean(.x, na.rm = TRUE)),
-            id = unique(id))
-tune_res_agg <- tune_res_agg[order(tune_res_agg$val_mse), ]
-
-best_params <- c(meta_params, get_row_list(tune_res[tune_res_agg$id[1], ]))
-input_embeds$params <- best_params
+best_params <- c(meta_params, get_row_list(grid[9, ]))
 
 ### Train final model with the "best" parameters
 model <- train_model(dat, embeds, best_params)
@@ -63,9 +69,9 @@ model <- train_model(dat, embeds, best_params)
 ### Assess the model quantitatively on the test set.
 test_embeds <- embeds[dat$fold == "test", , ]
 test_y <- dat$y[dat$fold == "test"]
-# test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
-eval_model(model, list(test_embeds), test_y,
-           metrics = c("mse", "f1", "accuracy"))
+test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
+eval_model(model, list(test_embeds, test_cov), test_y,
+           metrics = c("mse"))
 
 ### Basic interpretation
 p_acts <- get_phrase_acts(model, test_embeds, best_params,
