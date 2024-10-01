@@ -92,8 +92,8 @@ get_tune_metrics <- function(model, embeds, dat, metrics, fold, covars = NULL) {
                                   covs[dat$fold == fold, ]),
                       dat$y[dat$fold == fold], metrics)
   } else {
-    res <- eval_model(model, embeds[dat$fold == "train", , ],
-                      dat$y[dat$fold == "train"], metrics)
+    res <- eval_model(model, embeds[dat$fold == fold, , ],
+                      dat$y[dat$fold == fold], metrics)
   }
   return(res)
 }
