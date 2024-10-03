@@ -229,11 +229,22 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
     stop("Task is set to regression but only 2 unique outcomes detected. Did you mean to specify task = 'class'?")
   }
 
+  ### Train/test split
+  x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
+                   prob = c(1 - test_prop, test_prop))
+
+  ### Prep formatting of meta-params (which will include model params if only a
+  ### single model is being run).
+  params <- prep_params(model_params, tune_method)
+  params$n_tokens <- embed_instr$max_length
+  params$folder <- folder_name
+  params$task <- task
+
   ### Scale covariate columns (if included). The `scale_covars` function
   ### scales both the training and test sets using only the training data.
   if (!is.null(params$covars) & tune_method == "none" & scale_cov != "none") {
     x <- scale_vars(x, params$covars, scale_cov)$dat  # Case without tuning
-  } else if (!is.null(unlist(model_params$covars & scale_cov != "none"))) {
+  } else if (!is.null(unlist(model_params$covars)) & scale_cov != "none") {
     x <- scale_vars(x, unique(unlist(model_params$covars)),
                     scale_cov)$dat # Case with tuning
   }
@@ -245,17 +256,6 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
   ### Tokenize the text, maintain unique IDs?
   token_res <- tokenize(x, embed_method = embed_method,
                         embed_instr = embed_instr)
-
-  ### Train/test split
-  x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
-                   prob = c(1 - test_prop, test_prop))
-
-  ### Prep formatting of meta-params (which will include model params if only a
-  ### single model is being run).
-  params <- prep_params(model_params, tune_method)
-  params$n_tokens <- embed_instr$max_length
-  params$folder <- folder_name
-  params$task <- task
 
 
   ### Create parameter grid if tuning is happening
