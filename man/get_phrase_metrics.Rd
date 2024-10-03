@@ -4,7 +4,7 @@
 \alias{get_phrase_metrics}
 \title{Tuning Wrapper for get_top_phrases_quick()}
 \usage{
-get_phrase_metrics(model, params, embeds, tokens, vocab)
+get_phrase_metrics(model, params, embeds, tokens, vocab, dat)
 }
 \arguments{
 \item{model}{Trained model}

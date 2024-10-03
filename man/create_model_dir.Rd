@@ -13,7 +13,7 @@ create_model_dir(name)
 The location of the directory created
 }
 \description{
-This directory will contain the following subdirectories
+This directory will contain the following sub directories...
 }
 \examples{
 \dontrun{create_model_dir("example")}
