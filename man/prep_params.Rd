@@ -2,7 +2,9 @@
 % Please edit documentation in R/prep_data.R
 \name{prep_params}
 \alias{prep_params}
-\title{Create a list to store model parameters (meta-params and final model params)}
+\title{Create a list to store model parameters (meta-params and final model params)
+Handles parameter setting, with different cases for parameter tuning and
+direct specification (tuning = "none").}
 \usage{
 prep_params(p, tune_method)
 }
@@ -15,4 +17,6 @@ with Slurm, generically via a shell script, or not at all
 }
 \description{
 Create a list to store model parameters (meta-params and final model params)
+Handles parameter setting, with different cases for parameter tuning and
+direct specification (tuning = "none").
 }

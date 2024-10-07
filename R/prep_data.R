@@ -32,19 +32,41 @@ create_model_dir <- function(name) {
 #' Scale covariates to have mean-zero and standard deviation of 1 using training
 #' data.
 #'
-#' @param dat The input data set. Should include a `fold` column with `train`
+#' @param dat The input data set. Should include a `fold` column with `train`.
 #'        and `test` entries.
-#' @param covs Names of the columns to scale.
+#' @param vars The names of variables to scale.
+#' @param scale_type Either "normalize" or "min-max".
 #'
 #' @return The same data frame, but with the `covs` columns scaled.
 #' @export
 #'
 #' @examples
-scale_covars <- function(dat, covs) {
-  means <- apply(dat[dat$fold == "train", covs], 2, mean)
-  stdevs <- apply(dat[dat$fold == "train", covs], 2, sd)
-  dat[, covs] <- sweep(sweep(dat[, covs], 2, means), 2, stdevs, "/")
-  return(dat)
+#' dat <- as.data.frame(matrix(rnorm(12), ncol = 3))
+#' dat$fold <- "train"
+#' dat2 <- scale_vars(dat, c("V1", "V2"), "min-max")
+scale_vars <- function(dat, vars, scale_type) {
+
+  ### Want to record the scaling parameters, so performing manually.
+  dat_train <- dat[dat$fold == "train", vars, drop = FALSE]
+  if (scale_type == "normalize") {
+    means <- apply(dat_train, 2, mean)
+    stdevs <- apply(dat_train, 2, stats::sd)
+    dat[vars] <- sweep(sweep(dat[, vars, drop = FALSE], 2, means), 2, stdevs,
+                         "/")
+    res <- list("params" = list(means = means, stdevs = stdevs), "dat" = dat)
+
+  } else if (scale_type == "min-max") {
+    mins <- apply(dat_train, 2, min)
+    maxs <- apply(dat_train, 2, max)
+    for (i in 1:length(vars)) {
+      v <- vars[i]
+      dat[, v] <- -1 + (dat[, v] - mins[i])*2 / (maxs[i] -  mins[i])
+    }
+    res <- list("params" = list(mins = mins, maxs = maxs), "dat" = dat)
+  } else {
+    stop("Please specify an accepted method for scaling variables.")
+  }
+  return(res)
 }
 
 
@@ -153,11 +175,16 @@ create_grid <- function(model_params, K, task) {
 #' @param folder_name Name of directory to create for saving model files.
 #' @param folds Number of cross validation folds for tuning (default is NULL,
 #'        must set to an integer if tune_method != "none").
+#' @param scale_y Instructions for scaling the outcome. Default is "none." To
+#'        scale, set to either "normalize" or "min-max".
+#' @param scale_cov Instructions for scaling covariates. Default is "normalize".
+#'        To scale, set to either "normalize" or "min-max". To avoid scaling,
+#'        set to "none."
 #'
 #' @return
 #' @export
 #'
-#' @examples
+#' @examples \dontrun{
 #' model_params <- list("n_filts" = list(4, 8),
 #'                      "kern_sizes" = list(c(3, 5), c(3), c(5)),
 #'                      "lr" = list(0.0001, 0.001),
@@ -182,8 +209,9 @@ create_grid <- function(model_params, K, task) {
 #'                  embed_method = "name",
 #'                  embed_instr = list("name" = "bert-base-cased",
 #'                                     "max_length" = 200),
-#'                  folder_name = "example")
-prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
+#'                  folder_name = "example")}
+prep_data <- function(x, y_name, text_name,  model_params, task,
+                      test_prop = 0.2, scale_y = "none", scale_cov = "normalize",
                       embed_method = "default",
                       embed_instr = list("max_length" = 200),
                       tune_method = "none", folder_name, folds = NULL) {
@@ -197,11 +225,9 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
   ### Error handling for task setting.
   if (task == "class" & length(unique(x$y)) > 2) {
     stop("Task is set to classification but more than 2 classes detected.")
+  } else if (task == "reg" & length(unique(x$y)) == 2) {
+    stop("Task is set to regression but only 2 unique outcomes detected. Did you mean to specify task = 'class'?")
   }
-
-  ### Tokenize the text, maintain unique IDs?
-  token_res <- tokenize(x, embed_method = embed_method,
-                        embed_instr = embed_instr)
 
   ### Train/test split
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
@@ -216,16 +242,21 @@ prep_data <- function(x, y_name, text_name, model_params, task, test_prop = 0.2,
 
   ### Scale covariate columns (if included). The `scale_covars` function
   ### scales both the training and test sets using only the training data.
-  if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
-    x <- scale_covars(x, params$covars)
-  } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
-    x <- scale_covars(x, unique(unlist(model_params$covars)))
+  if (!is.null(params$covars) & tune_method == "none" & scale_cov != "none") {
+    x <- scale_vars(x, params$covars, scale_cov)$dat  # Case without tuning
+  } else if (!is.null(unlist(model_params$covars)) & scale_cov != "none") {
+    x <- scale_vars(x, unique(unlist(model_params$covars)),
+                    scale_cov)$dat # Case with tuning
   }
 
   ### Similarly, scale the outcome if it is continuous.
-  if (task == "reg") {
-    x$y <- (x$y - mean(x$y[x$fold == "train"])) / sd(x$y[x$fold == "train"])
-  }
+  if (task == "reg" & scale_y != "none") x <- scale_vars(x, "y", scale_y)$dat
+
+
+  ### Tokenize the text, maintain unique IDs?
+  token_res <- tokenize(x, embed_method = embed_method,
+                        embed_instr = embed_instr)
+
 
   ### Create parameter grid if tuning is happening
   if (tune_method != "none") {
