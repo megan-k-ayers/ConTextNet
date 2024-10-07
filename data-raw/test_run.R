@@ -11,7 +11,7 @@ set.seed(123)
 tensorflow::set_random_seed(123)
 
 ### Setup
-n <- 5000
+n <- 100
 # x <- read.csv("data-raw/imdb_full.csv")
 # x <- read.csv("data-raw/beer_reviews_cleaned.csv")[, c("text", "taste_score")]
 x <- read.csv("data-raw/persuasion_for_good/indiv-cleaned.csv")[, c(1, 2)]
@@ -20,22 +20,19 @@ names(x) <- c("text", "y")
 x <- x[sample(1:nrow(x), n), ]
 
 # Create fake covariate(s) to test
-# x$cov1 <- rnorm(n)
+x$cov1 <- rnorm(n)
 # x$cov2 <- rnorm(n, mean = x$y, sd = 0.4)
 
 
-model_params <- list("n_filts" = list(4, 8),
-                     "kern_sizes" = list(5, 7),
-                     "lr" = list(0.001, 0.0001),
-                     "lambda_cnn" = list(0.001),
+model_params <- list("n_filts" = list(4), "kern_sizes" = list(5),
+                     "lr" = list(0.001, 0.0001), "lambda_cnn" = list(0.001),
                      "lambda_corr" = list(0), "lambda_out" = list(0.005),
                      "epochs" = list(100), "batch_size" = list(32),
-                     "patience" = 30,
-                     "covars" = list(NULL))
+                     "patience" = 30, "covars" = list("cov1"))
 
 ### Prep and embed
 inputs <- prep_data(x = x, y_name = "y", text_name = "text",
-                    scale_cov = "normalize", scale_y = "min-max",
+                    scale_cov = "min-max", scale_y = "normalize",
                     model_params = model_params, task = "reg",
                     folder_name = "example", tune_method = "local",
                     embed_instr = list(max_length = 40), folds = 3)
@@ -73,8 +70,8 @@ model <- train_model(dat[dat$fold == "train", ],
 ### Assess the model quantitatively on the test set.
 test_embeds <- embeds[dat$fold == "test", , ]
 test_y <- dat$y[dat$fold == "test"]
-# test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
-eval_model(model, list(test_embeds), test_y,
+test_cov <- as.matrix(dat[dat$fold == "test", best_params$covars])
+eval_model(model, list(test_embeds, test_cov), test_y,
            metrics = c("mse", "f1", "accuracy"))
 # eval_model(model, list(test_embeds), test_y,
 #            metrics = c("mse"))

@@ -66,7 +66,7 @@ scale_vars <- function(dat, vars, scale_type) {
   } else {
     stop("Please specify an accepted method for scaling variables.")
   }
-  return(dat)
+  return(res)
 }
 
 
@@ -250,7 +250,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
   }
 
   ### Similarly, scale the outcome if it is continuous.
-  if (task == "reg" & scale_y != "none") x <- scale_vars(x, "y", scale_y)
+  if (task == "reg" & scale_y != "none") x <- scale_vars(x, "y", scale_y)$dat
 
 
   ### Tokenize the text, maintain unique IDs?
