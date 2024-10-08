@@ -11,6 +11,8 @@ prep_data(
   model_params,
   task,
   test_prop = 0.2,
+  scale_y = "none",
+  scale_cov = "normalize",
   embed_method = "default",
   embed_instr = list(max_length = 200),
   tune_method = "none",
@@ -31,6 +33,13 @@ tuning.}
 \item{task}{Whether this is "reg" (regression) or "class" (classification).}
 
 \item{test_prop}{Proportion of \code{nrow(x)} to reserve in the test set.}
+
+\item{scale_y}{Instructions for scaling the outcome. Default is "none." To
+scale, set to either "normalize" or "min-max".}
+
+\item{scale_cov}{Instructions for scaling covariates. Default is "normalize".
+To scale, set to either "normalize" or "min-max". To avoid scaling,
+set to "none."}
 
 \item{embed_method}{How embedding should be performed ("file" to read from
 files, "name" for Hugging Face model referenced by name, or "default"
@@ -60,6 +69,7 @@ must set to an integer if tune_method != "none").}
 Prepare data for ConTextNet model
 }
 \examples{
+\dontrun{
 model_params <- list("n_filts" = list(4, 8),
                      "kern_sizes" = list(c(3, 5), c(3), c(5)),
                      "lr" = list(0.0001, 0.001),
@@ -84,5 +94,5 @@ res <- prep_data(x = imdb, y_name = "y", text_name = "text",
                  embed_method = "name",
                  embed_instr = list("name" = "bert-base-cased",
                                     "max_length" = 200),
-                 folder_name = "example")
+                 folder_name = "example")}
 }
