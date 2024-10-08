@@ -4,9 +4,11 @@
 \alias{check_y}
 \title{Check outcome column}
 \usage{
-check_y(x)
+check_y(y_name, x)
 }
 \arguments{
+\item{y_name}{Name of the outcome column}
+
 \item{x}{The input data frame}
 }
 \value{

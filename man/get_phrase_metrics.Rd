@@ -17,6 +17,8 @@ get_phrase_metrics(model, params, embeds, tokens, vocab, dat)
 
 \item{vocab}{Named list, where values are token values and names are the
 corresponding text}
+
+\item{dat}{Original data set}
 }
 \value{
 Short summary of top phrases

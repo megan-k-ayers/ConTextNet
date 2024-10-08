@@ -13,18 +13,56 @@
 #' This directory will contain the following sub directories...
 #'
 #' @param name Name to give the directory for this model
+#' @param path Path to the parent directory
+#' @param override By default, the directory will only be created if you
+#' give permission interactively. Set override = TRUE to create the directory
+#' without interactive checks. Existing directories will not be overwritten -
+#' a new directory name must be given.
 #'
 #' @return The location of the directory created
 #'
 #' @examples
 #' \dontrun{create_model_dir("example")}
-create_model_dir <- function(name) {
+create_model_dir <- function(name, path = "", override = FALSE) {
 
-  ### Check if name exists already
+  ### If the parent directory doesn't exist, throw an error.
+  if (path != "") {
+    if(!dir.exists(path)) {
+      stop(paste0("Cannot find the parent directory `", path, "`."))
+    }
+    new_path <- file.path(path, name)
+  } else {
+    new_path <- name
+  }
 
-  ### If yes, do not create and throw a warning message
+  ### If directory already exists, throw an error.
+  exists_flag <- dir.exists(new_path)
+  if (exists_flag) {
+    stop(paste0("The directory ", new_path, " already exists at this working",
+                " directory. Please provide a unique name for this model's",
+                " directory."))
+  }
 
-  ### If no, create it.
+  ### If directory doesn't exist in the current working directory, verify
+  ### that the user wants to create one.
+  if (interactive()) {
+    cli::cli_bullets(c("Cannot find existing directory {.path {path}}.",
+                       "i" = "Would you like to create a new directory here?"))
+    create_dir <- utils::menu(c("Yes", "No")) == 1
+  } else if (!override) {
+    stop("To create a model directory outside of an interactive R session",
+         " please specify `override_dir = TRUE` in your call to `prep_data()`.")
+  }
+
+  if (!create_dir) {
+    stop("Please call `prep_data() again with an acceptable path for the model",
+         " directory.")
+  } else {
+    dir.create(new_path)
+    if (dir.exists(new_path)) {
+      cli::cli_alert_success("Created directory: {.path {path}}.")
+    }
+  }
 
 }
 
@@ -173,6 +211,10 @@ create_grid <- function(model_params, K, task) {
 #'        with Slurm, generically via a shell script, or not at all
 #'        ("local", "slurm", "shell", or "none")
 #' @param folder_name Name of directory to create for saving model files.
+#' @param folder_path Path to parent directory where folder_name should be
+#'        stored (defaults to current working directory).
+#' @param override_dir Create a new directory at the given path if it doesn't
+#'        exist, without interactive confirmation.
 #' @param folds Number of cross validation folds for tuning (default is NULL,
 #'        must set to an integer if tune_method != "none").
 #' @param scale_y Instructions for scaling the outcome. Default is "none." To
@@ -211,27 +253,37 @@ create_grid <- function(model_params, K, task) {
 #'                                     "max_length" = 200),
 #'                  folder_name = "example")}
 prep_data <- function(x, y_name, text_name,  model_params, task,
-                      test_prop = 0.2, scale_y = "none", scale_cov = "normalize",
-                      embed_method = "default",
+                      test_prop = 0.2, scale_y = "none",
+                      scale_cov = "normalize", embed_method = "default",
                       embed_instr = list("max_length" = 200),
-                      tune_method = "none", folder_name, folds = NULL) {
+                      tune_method = "none", folder_name, folder_path = "",
+                      folds = NULL, override_dir = FALSE) {
 
-  ### Create directory for model files
+  ### Create directory for model files.
+  create_model_dir(folder_name, folder_path, override_dir)
 
-  ### Rename outcome and text columns (if needed)
 
-  ### Perform QA checks on data
+  ### Check and rename outcome and text columns.
+  check_y(y_name, x)
+  names(x)[names(x) == y_name] <- "y"
+
+  check_text(text_name, x)
+  names(x)[names(x) == text_name] <- "text"
+
 
   ### Error handling for task setting.
   if (task == "class" & length(unique(x$y)) > 2) {
     stop("Task is set to classification but more than 2 classes detected.")
   } else if (task == "reg" & length(unique(x$y)) == 2) {
-    stop("Task is set to regression but only 2 unique outcomes detected. Did you mean to specify task = 'class'?")
+    stop("Task is set to regression but only 2 unique outcomes detected. Did ",
+         "you mean to specify `task = \"class\"?`")
   }
+
 
   ### Train/test split
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
                    prob = c(1 - test_prop, test_prop))
+
 
   ### Prep formatting of meta-params (which will include model params if only a
   ### single model is being run).
@@ -240,14 +292,20 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
   params$folder <- folder_name
   params$task <- task
 
-  ### Scale covariate columns (if included). The `scale_covars` function
-  ### scales both the training and test sets using only the training data.
-  if (!is.null(params$covars) & tune_method == "none" & scale_cov != "none") {
-    x <- scale_vars(x, params$covars, scale_cov)$dat  # Case without tuning
-  } else if (!is.null(unlist(model_params$covars)) & scale_cov != "none") {
-    x <- scale_vars(x, unique(unlist(model_params$covars)),
-                    scale_cov)$dat # Case with tuning
+
+  ### QA covariates (if included) and potentially scale them. The `scale_covars`
+  ### function scales both the training and test sets using only the training
+  ### data.
+  if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
+    covs <- params$covars
+    check_covs(x, covs)
+    if (scale_cov != "none") x <- scale_vars(x, covs, scale_cov)$dat
+  } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
+    covs <- unique(unlist(model_params$covars))
+    check_covs(x, covs)
+    if (scale_cov != "none") x <- scale_vars(x, covs, scale_cov)$dat
   }
+
 
   ### Similarly, scale the outcome if it is continuous.
   if (task == "reg" & scale_y != "none") x <- scale_vars(x, "y", scale_y)$dat
@@ -269,6 +327,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                                     labels = FALSE))
   }
 
+
   ### Write shell script(s), whatever will be needed for running on the cluster,
   ### unless choosing to run locally.
 
@@ -284,7 +343,8 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                 tune_method = tune_method,
                 grid = grid)
 
-  ### See if you can zip up the input list and the cluster scripts?
+  ### See if you can zip up the input list and the cluster scripts? Option
+  ### to write and/or return these.
 
   return(input)
 
