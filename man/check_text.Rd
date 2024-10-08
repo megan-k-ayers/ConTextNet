@@ -4,7 +4,12 @@
 \alias{check_text}
 \title{Check text column}
 \usage{
-check_text()
+check_text(text_name, x)
+}
+\arguments{
+\item{text_name}{Name of the text column}
+
+\item{x}{The input data frame}
 }
 \value{
 A logical flag indicating if format check passed (TRUE)

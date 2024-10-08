@@ -12,7 +12,8 @@
 #'
 #' This directory will contain the following sub directories...
 #'
-#' @param path Name to give the directory for this model
+#' @param name Name to give the directory for this model
+#' @param path Path to the parent directory
 #' @param override By default, the directory will only be created if you
 #' give permission interactively. Set override = TRUE to create the directory
 #' without interactive checks. Existing directories will not be overwritten -
@@ -252,39 +253,32 @@ create_grid <- function(model_params, K, task) {
 #'                                     "max_length" = 200),
 #'                  folder_name = "example")}
 prep_data <- function(x, y_name, text_name,  model_params, task,
-                      test_prop = 0.2, scale_y = "none", scale_cov = "normalize",
-                      embed_method = "default",
+                      test_prop = 0.2, scale_y = "none",
+                      scale_cov = "normalize", embed_method = "default",
                       embed_instr = list("max_length" = 200),
                       tune_method = "none", folder_name, folder_path = "",
-                      folds = NULL) {
+                      folds = NULL, override_dir = FALSE) {
 
-  ### Create directory for model files
+  ### Create directory for model files.
   create_model_dir(folder_name, folder_path, override_dir)
 
-  ### Rename outcome and text columns (if needed)
-  if (y_name != "y") {
-    if (!y_name %in% names(x)) {
-      stop("The given y_name is not a column of x.")
-    }
-    names(x)[names(x) == y_name] <- "y"
-  }
 
-  if (text_name != "text") {
-    if (!text_name %in% names(x)) {
-      stop("The given text_name is not a column of x.")
-    }
-    names(x)[names(x) == text_name] <- "text"
-  }
+  ### Check and rename outcome and text columns.
+  check_y(y_name, x)
+  names(x)[names(x) == y_name] <- "y"
 
-  ### Perform QA checks on data
+  check_text(text_name, x)
+  names(x)[names(x) == text_name] <- "text"
 
 
   ### Error handling for task setting.
   if (task == "class" & length(unique(x$y)) > 2) {
     stop("Task is set to classification but more than 2 classes detected.")
   } else if (task == "reg" & length(unique(x$y)) == 2) {
-    stop("Task is set to regression but only 2 unique outcomes detected. Did you mean to specify task = 'class'?")
+    stop("Task is set to regression but only 2 unique outcomes detected. Did ",
+         "you mean to specify `task = \"class\"?`")
   }
+
 
   ### Train/test split
   x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
@@ -299,13 +293,17 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
   params$task <- task
 
 
-  ### Scale covariate columns (if included). The `scale_covars` function
-  ### scales both the training and test sets using only the training data.
-  if (!is.null(params$covars) & tune_method == "none" & scale_cov != "none") {
-    x <- scale_vars(x, params$covars, scale_cov)$dat  # Case without tuning
-  } else if (!is.null(unlist(model_params$covars)) & scale_cov != "none") {
-    x <- scale_vars(x, unique(unlist(model_params$covars)),
-                    scale_cov)$dat # Case with tuning
+  ### QA covariates (if included) and potentially scale them. The `scale_covars`
+  ### function scales both the training and test sets using only the training
+  ### data.
+  if (!is.null(params$covars) & tune_method == "none") {  # Case without tuning
+    covs <- params$covars
+    check_covs(x, covs)
+    if (scale_cov != "none") x <- scale_vars(x, covs, scale_cov)$dat
+  } else if (!is.null(unlist(model_params$covars))) {  # Case with tuning
+    covs <- unique(unlist(model_params$covars))
+    check_covs(x, covs)
+    if (scale_cov != "none") x <- scale_vars(x, covs, scale_cov)$dat
   }
 
 
@@ -345,7 +343,8 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                 tune_method = tune_method,
                 grid = grid)
 
-  ### See if you can zip up the input list and the cluster scripts?
+  ### See if you can zip up the input list and the cluster scripts? Option
+  ### to write and/or return these.
 
   return(input)
 

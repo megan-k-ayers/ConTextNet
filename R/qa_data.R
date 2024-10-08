@@ -11,40 +11,42 @@
 #' Check outcome column
 #'
 #' @param x The input data frame
+#' @param y_name Name of the outcome column
 #'
 #' @return A logical flag indicating if format check passed (TRUE)
 #'
 #' @examples
-check_y <- function(x) {
-  exists <- "y" %in% names(x)
-  return(exists)
+check_y <- function(y_name, x) {
+  if (!y_name %in% names(x)) {
+    stop("The given `y_name` is not a column of `x`.")
+  }
 }
 
 #' Check text column
 #'
-#' @return A logical flag indicating if format check passed (TRUE)
-#'
-#' @examples
-check_text <- function() {
-  return(1)
-}
-
-#' Check any co variate columns
+#' @param text_name Name of the text column
+#' @param x The input data frame
 #'
 #' @return A logical flag indicating if format check passed (TRUE)
 #'
 #' @examples
-check_normed <- function() {
-  return(1)
+check_text <- function(text_name, x) {
+  if (!text_name %in% names(x)) {
+    stop("The given `text_name` is not a column of `x`.")
+  }
 }
 
-
-#' Check input data format
+#' Check that covariates exist.
 #'
-#' @return A logical flag indicating if all format checks passed (TRUE)
-#' @export
+#' @param x Data frame
+#' @param covs Covariate names
+#'
+#' @return No return value, throws an error if check fails.
 #'
 #' @examples
-qa_data <- function() {
-  return(1)
+check_covs <- function(x, covs) {
+  if (!covs %in% names(x)) {
+    stop("At least one of the specified covariates cannot be found in `x`.")
+  }
 }
+

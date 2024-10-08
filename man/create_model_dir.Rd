@@ -4,10 +4,17 @@
 \alias{create_model_dir}
 \title{Create new directory for model files}
 \usage{
-create_model_dir(name)
+create_model_dir(name, path = "", override = FALSE)
 }
 \arguments{
 \item{name}{Name to give the directory for this model}
+
+\item{path}{Path to the parent directory}
+
+\item{override}{By default, the directory will only be created if you
+give permission interactively. Set override = TRUE to create the directory
+without interactive checks. Existing directories will not be overwritten -
+a new directory name must be given.}
 }
 \value{
 The location of the directory created

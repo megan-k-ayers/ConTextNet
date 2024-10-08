@@ -17,7 +17,9 @@ prep_data(
   embed_instr = list(max_length = 200),
   tune_method = "none",
   folder_name,
-  folds = NULL
+  folder_path = "",
+  folds = NULL,
+  override_dir = FALSE
 )
 }
 \arguments{
@@ -62,8 +64,14 @@ with Slurm, generically via a shell script, or not at all
 
 \item{folder_name}{Name of directory to create for saving model files.}
 
+\item{folder_path}{Path to parent directory where folder_name should be
+stored (defaults to current working directory).}
+
 \item{folds}{Number of cross validation folds for tuning (default is NULL,
 must set to an integer if tune_method != "none").}
+
+\item{override_dir}{Create a new directory at the given path if it doesn't
+exist, without interactive confirmation.}
 }
 \description{
 Prepare data for ConTextNet model

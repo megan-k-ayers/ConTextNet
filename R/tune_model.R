@@ -59,6 +59,7 @@ get_doc_metrics <- function(model, params, embeds, dat) {
 #'
 #' @param embeds Word embeddings
 #' @param model Trained model
+#' @param dat Original data set
 #' @inheritParams get_top_phrases_quick
 #'
 #' @return Short summary of top phrases
