@@ -46,7 +46,7 @@ create_model_dir <- function(name, path = "", override = FALSE) {
   ### If directory doesn't exist in the current working directory, verify
   ### that the user wants to create one.
   if (interactive()) {
-    cli::cli_bullets(c("Cannot find existing directory {.path {path}}.",
+    cli::cli_bullets(c("Cannot find existing directory {.new_path {new_path}}.",
                        "i" = "Would you like to create a new directory here?"))
     create_dir <- utils::menu(c("Yes", "No")) == 1
   } else if (!override) {
@@ -60,7 +60,7 @@ create_model_dir <- function(name, path = "", override = FALSE) {
   } else {
     dir.create(new_path)
     if (dir.exists(new_path)) {
-      cli::cli_alert_success("Created directory: {.path {path}}.")
+      cli::cli_alert_success("Created directory: {.new_path {new_path}}.")
     }
   }
 
