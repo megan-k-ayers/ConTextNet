@@ -25,13 +25,11 @@ In future development the package will provide documentation and helper
 functions to guide users through the necessary Python dependency
 installations and to streamline interactions with common HPC interfaces.
 
-<!-- ## Installation -->
-<!-- You can install the development version of ConTextNet like so: -->
-<!-- <!-- ``` r -->
-
-–\>
-<!-- <!-- # FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE? -->
-–\> <!-- <!-- ``` --> –\>
+## Installation
+You can install the development version of ConTextNet like so:
+``` r
+install_github("megan-k-ayers/ConTextNet")
+```
 
 ## Example
 
