@@ -44,7 +44,6 @@ tokenize <- function(x, embed_method = "default",
 
   if (embed_method == "file") {
     stop("This functionality still needs to be developed.")
-    return(1)
   } else if (embed_method == "default") {
     model_name <- "prajjwal1/bert-tiny"
   } else if (embed_method == "name") {

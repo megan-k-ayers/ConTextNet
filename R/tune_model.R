@@ -111,6 +111,7 @@ get_tune_metrics <- function(model, embeds, dat, metrics, fold, covars = NULL) {
 #' @param vocab Vocab map from tokenizer
 #'
 #' @return Data frame, which is grid with model performances filled in.
+#' @export
 #'
 #' @examples
 tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
@@ -166,7 +167,8 @@ tune_model <- function(dat, embeds, meta_params, grid, tokens, vocab) {
                                   vocab = vocab,
                                   dat = temp[temp$fold == "test", ])
 
-    # Free up memory (only partially successful in my past experience)
+    # Free up memory (only partially successful in my past experience, thus the
+    # batching).
     rm(list = c("model"))
     keras::k_clear_session()
     tf$keras$backend$clear_session()

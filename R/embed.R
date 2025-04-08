@@ -14,6 +14,7 @@
 #'
 #' @return List, which is `input_list` now including the text embeddings, with
 #' the embedding dimension recorded in `input_list$params$embed_dim`.
+#' @export
 #'
 #' @examples
 #' \dontrun{

@@ -62,7 +62,8 @@ sample (named "max_length")}
 with Slurm, generically via a shell script, or not at all
 ("local", "slurm", "shell", or "none")}
 
-\item{folder_name}{Name of directory to create for saving model files.}
+\item{folder_name}{Name of directory to create for saving model files. If
+NULL, no directory will be created.}
 
 \item{folder_path}{Path to parent directory where folder_name should be
 stored (defaults to current working directory).}

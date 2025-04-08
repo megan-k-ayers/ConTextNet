@@ -210,7 +210,8 @@ create_grid <- function(model_params, K, task) {
 #' @param tune_method How tuning should be performed: locally, via a Cluster
 #'        with Slurm, generically via a shell script, or not at all
 #'        ("local", "slurm", "shell", or "none")
-#' @param folder_name Name of directory to create for saving model files.
+#' @param folder_name Name of directory to create for saving model files. If
+#'        NULL, no directory will be created.
 #' @param folder_path Path to parent directory where folder_name should be
 #'        stored (defaults to current working directory).
 #' @param override_dir Create a new directory at the given path if it doesn't
@@ -260,7 +261,11 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                       folds = NULL, override_dir = FALSE) {
 
   ### Create directory for model files.
-  create_model_dir(folder_name, folder_path, override_dir)
+  if (!is.null(folder_name)) {
+    create_model_dir(folder_name, folder_path, override_dir)
+  } else {
+    print("Skipped creating a directory to save model files.")
+  }
 
 
   ### Check and rename outcome and text columns.
