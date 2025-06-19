@@ -13,6 +13,7 @@
 #' @param grid_row Grid row of parameter settings to evaluate
 #'
 #' @return A list
+#' @export
 #'
 #' @examples
 get_row_list <- function(grid_row) {
