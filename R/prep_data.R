@@ -152,16 +152,29 @@ prep_params <- function(p, tune_method) {
 #' @examples
 create_grid <- function(model_params, K, task) {
 
-  grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
-                             "kern_sizes" = model_params$kern_sizes,
-                             "lr" = model_params$lr,
-                             "lambda_cnn" = model_params$lambda_cnn,
-                             "lambda_corr" = model_params$lambda_corr,
-                             "lambda_out" = model_params$lambda_out,
-                             "epochs" = model_params$epochs,
-                             "batch_size" = model_params$batch_size,
-                             "patience" = model_params$patience,
-                             "covars" = model_params$covars)
+  if (is.null(model_params$covars)) {
+    grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
+                               "kern_sizes" = model_params$kern_sizes,
+                               "lr" = model_params$lr,
+                               "lambda_cnn" = model_params$lambda_cnn,
+                               "lambda_corr" = model_params$lambda_corr,
+                               "lambda_out" = model_params$lambda_out,
+                               "epochs" = model_params$epochs,
+                               "batch_size" = model_params$batch_size,
+                               "patience" = model_params$patience)
+    grid$covars <- NULL
+  } else {
+    grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
+                               "kern_sizes" = model_params$kern_sizes,
+                               "lr" = model_params$lr,
+                               "lambda_cnn" = model_params$lambda_cnn,
+                               "lambda_corr" = model_params$lambda_corr,
+                               "lambda_out" = model_params$lambda_out,
+                               "epochs" = model_params$epochs,
+                               "batch_size" = model_params$batch_size,
+                               "patience" = model_params$patience,
+                               "covars" = model_params$covars)
+  }
   grid$id <- 1:nrow(grid)
   grid <- do.call("rbind", replicate(K, grid, simplify = FALSE))
   grid <- grid[order(grid$id), ]
