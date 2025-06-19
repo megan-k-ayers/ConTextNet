@@ -63,6 +63,7 @@ get_cnn_layer_acts <- function(model, input, k, n_filts, max_length) {
 #' @return Data frame with convolutional layer activations for all input word
 #'         embeddings.
 #'
+#' @export
 #' @examples \dontrun{
 #' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
 #' embeds <- imdb_embed$embeds[imdb_embed$dat$fold == "train", , ]

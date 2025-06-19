@@ -16,6 +16,8 @@
 #' @return A `ggplot` scatterplot with a facet per convolutional filter.
 #' @importFrom ggplot2 ggplot aes geom_jitter geom_point geom_smooth
 #'
+#' @export
+#'
 #' @examples \dontrun{
 #' imdb_embed$params$epochs <- 100
 #' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)

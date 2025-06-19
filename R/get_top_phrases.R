@@ -39,6 +39,7 @@ get_phrase <- function(doc_tokens, phrase_id, k, vocab) {
 #' @param m Number of top phrases to pull per filter.
 #'
 #' @return Data frame with top phrases and their activations.
+#' @export
 #'
 #' @examples \dontrun{
 #' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)

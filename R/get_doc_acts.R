@@ -18,6 +18,7 @@
 #'
 #' @return Data frame with convolutional layer activations for all input word
 #'         embeddings.
+#' @export
 #'
 #' @examples \dontrun{
 #' model <- train_model(imdb_embed$dat, imdb_embed$embeds, imdb_embed$params)
