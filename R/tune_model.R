@@ -17,16 +17,21 @@
 #'
 #' @examples
 get_row_list <- function(grid_row) {
-  return(list("n_filts" = unlist(grid_row$n_filts),
-              "kern_sizes" = unlist(grid_row$kern_sizes),
-              "lr" = unlist(grid_row$lr),
-              "lambda_cnn" = unlist(grid_row$lambda_cnn),
-              "lambda_corr" = unlist(grid_row$lambda_corr),
-              "lambda_out" = unlist(grid_row$lambda_out),
-              "epochs" = unlist(grid_row$epochs),
-              "batch_size" = unlist(grid_row$batch_size),
-              "patience" = unlist(grid_row$patience),
-              "covars" = unlist(grid_row$covars)))
+  l <- list("n_filts" = unlist(grid_row$n_filts),
+            "kern_sizes" = unlist(grid_row$kern_sizes),
+            "lr" = unlist(grid_row$lr),
+            "lambda_cnn" = unlist(grid_row$lambda_cnn),
+            "lambda_corr" = unlist(grid_row$lambda_corr),
+            "lambda_out" = unlist(grid_row$lambda_out),
+            "epochs" = unlist(grid_row$epochs),
+            "batch_size" = unlist(grid_row$batch_size),
+            "patience" = unlist(grid_row$patience))
+  if (!"covars" %in% names(grid_row)) {
+    l$covars <- NULL
+  } else {
+    l$covars <- unlist(grid_row$covars)
+  }
+  return(l)
 }
 
 

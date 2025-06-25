@@ -260,6 +260,10 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                       tune_method = "none", folder_name, folder_path = "",
                       folds = NULL, override_dir = FALSE) {
 
+  if (!task %in% c("class", "reg")) {
+    stop("Please set `task` to either `class` or `reg`.")
+  }
+
   ### Create directory for model files.
   flag <- dir.exists(file.path(folder_path, folder_name))
   if (!is.null(folder_name) & !flag) {
