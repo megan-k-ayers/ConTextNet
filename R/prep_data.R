@@ -35,13 +35,13 @@ create_model_dir <- function(name, path = "", override = FALSE) {
     new_path <- name
   }
 
-  ### If directory already exists, throw an error.
-  exists_flag <- dir.exists(new_path)
-  if (exists_flag) {
-    stop(paste0("The directory ", new_path, " already exists at this working",
-                " directory. Please provide a unique name for this model's",
-                " directory."))
-  }
+  # ### If directory already exists, throw an error.
+  # exists_flag <- dir.exists(new_path)
+  # if (exists_flag) {
+  #   stop(paste0("The directory ", new_path, " already exists at this working",
+  #               " directory. Please provide a unique name for this model's",
+  #               " directory."))
+  # }
 
   ### If directory doesn't exist in the current working directory, verify
   ### that the user wants to create one.
@@ -152,29 +152,16 @@ prep_params <- function(p, tune_method) {
 #' @examples
 create_grid <- function(model_params, K, task) {
 
-  if (is.null(model_params$covars)) {
-    grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
-                               "kern_sizes" = model_params$kern_sizes,
-                               "lr" = model_params$lr,
-                               "lambda_cnn" = model_params$lambda_cnn,
-                               "lambda_corr" = model_params$lambda_corr,
-                               "lambda_out" = model_params$lambda_out,
-                               "epochs" = model_params$epochs,
-                               "batch_size" = model_params$batch_size,
-                               "patience" = model_params$patience)
-    grid$covars <- NULL
-  } else {
-    grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
-                               "kern_sizes" = model_params$kern_sizes,
-                               "lr" = model_params$lr,
-                               "lambda_cnn" = model_params$lambda_cnn,
-                               "lambda_corr" = model_params$lambda_corr,
-                               "lambda_out" = model_params$lambda_out,
-                               "epochs" = model_params$epochs,
-                               "batch_size" = model_params$batch_size,
-                               "patience" = model_params$patience,
-                               "covars" = model_params$covars)
-  }
+  grid <- tidyr::expand_grid("n_filts" = model_params$n_filts,
+                             "kern_sizes" = model_params$kern_sizes,
+                             "lr" = model_params$lr,
+                             "lambda_cnn" = model_params$lambda_cnn,
+                             "lambda_corr" = model_params$lambda_corr,
+                             "lambda_out" = model_params$lambda_out,
+                             "epochs" = model_params$epochs,
+                             "batch_size" = model_params$batch_size,
+                             "patience" = model_params$patience)
+
   grid$id <- 1:nrow(grid)
   grid <- do.call("rbind", replicate(K, grid, simplify = FALSE))
   grid <- grid[order(grid$id), ]
@@ -274,8 +261,13 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                       folds = NULL, override_dir = FALSE) {
 
   ### Create directory for model files.
-  if (!is.null(folder_name)) {
+  flag <- dir.exists(file.path(folder_path, folder_name))
+  if (!is.null(folder_name) & !flag) {
     create_model_dir(folder_name, folder_path, override_dir)
+  } else if (flag) {
+    print(paste0("Using existing directory ",
+                 file.path(folder_path, folder_name),
+                 " to save model files."))
   } else {
     print("Skipped creating a directory to save model files.")
   }
