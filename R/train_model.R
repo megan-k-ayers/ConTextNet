@@ -41,8 +41,9 @@ train_model <- function(dat, embeds, params, run_quiet = FALSE) {
   model <- init_model(params)
 
   ### Train the model with early stopping.
-  callback = tf$keras$callbacks$EarlyStopping(monitor = 'val_loss',
-                                              patience = params$patience)
+  callback = list(tf$keras$callbacks$EarlyStopping(monitor = 'val_loss',
+                                              patience = params$patience),
+                  tf$keras$callbacks$TerminateOnNaN())
   verbose <- if (run_quiet) 0 else getOption("keras.fit_verbose",
                                              default = "auto")
   history <- model %>%

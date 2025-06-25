@@ -47,9 +47,13 @@ get_doc_metrics <- function(model, params, embeds, dat) {
   # Document-level activation ranges
   acts <- get_doc_acts(model = model, params = params, embeds = embeds,
                        dat = dat)
-  ranges <- stats::aggregate(activation ~ filter, acts, range)
-  ranges <- round(ranges$activation[, 2] - ranges$activation[, 1], 3)
-  ranges <- paste(ranges, collapse = "|")
+  if (any(is.nan(acts$activation)) | any(is.nan(acts$wt))) {
+    ranges <- NaN
+  } else {
+    ranges <- stats::aggregate(activation ~ filter, acts, range)
+    ranges <- round(ranges$activation[, 2] - ranges$activation[, 1], 3)
+    ranges <- paste(ranges, collapse = "|")
+  }
 
   # Max correlation between document-level activations
   acts <- tidyr::pivot_wider(acts[, c("filter", "activation", "sample_id")],
