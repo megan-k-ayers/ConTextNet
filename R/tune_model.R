@@ -48,12 +48,13 @@ get_doc_metrics <- function(model, params, embeds, dat) {
   acts <- get_doc_acts(model = model, params = params, embeds = embeds,
                        dat = dat)
   if (any(is.nan(acts$activation)) | any(is.nan(acts$wt))) {
-    ranges <- NaN
-  } else {
-    ranges <- stats::aggregate(activation ~ filter, acts, range)
-    ranges <- round(ranges$activation[, 2] - ranges$activation[, 1], 3)
-    ranges <- paste(ranges, collapse = "|")
+    return(data.frame("act_range" =  as.character(NaN),
+                      "max_corr" = NaN))
   }
+
+  ranges <- stats::aggregate(activation ~ filter, acts, range)
+  ranges <- round(ranges$activation[, 2] - ranges$activation[, 1], 3)
+  ranges <- paste(ranges, collapse = "|")
 
   # Max correlation between document-level activations
   acts <- tidyr::pivot_wider(acts[, c("filter", "activation", "sample_id")],
@@ -78,6 +79,9 @@ get_doc_metrics <- function(model, params, embeds, dat) {
 get_phrase_metrics <- function(model, params, embeds, tokens, vocab, dat) {
   acts <- get_phrase_acts(model = model, params = params, embeds = embeds,
                           dat = dat)
+  if (any(is.nan(acts$activation)) | any(is.nan(acts$wt))) {
+    return("NaN")
+  }
   return(get_top_phrases_quick(phrase_acts = acts,  tokens = tokens,
                                params = params, vocab = vocab))
 }
