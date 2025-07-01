@@ -330,9 +330,8 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                         embed_instr = embed_instr)
 
 
-  ### Create parameter grid if tuning is happening
+  ### Create folds within training set if tuning is happening
   if (tune_method != "none") {
-    grid <- create_grid(model_params = model_params, K = folds, task = task)
 
     # Define folds within the training set for tuning cross-validation
     inds <- which(x$fold == "train")
@@ -354,8 +353,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                 vocab = token_res$vocab,
                 embed_method = embed_method,
                 embed_instr = embed_instr,
-                tune_method = tune_method,
-                grid = grid)
+                tune_method = tune_method)
 
   ### See if you can zip up the input list and the cluster scripts? Option
   ### to write and/or return these.
