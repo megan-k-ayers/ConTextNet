@@ -53,7 +53,7 @@ embed <- function(input_list, save = TRUE) {
   input_list$embeds <- embeds
 
   if (save) {
-    saveRDS(input_embeds,
+    saveRDS(input_list,
             paste0(file.path(folder_path, folder_name), "/input_embeds.rds"))
   } else {
     return(input_list)

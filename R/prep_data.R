@@ -229,7 +229,7 @@ prep_cluster_tune <- function(grid_len, job_iters, input_path, conda_env,
   cat(paste0("\n   dsq --job-file ", dirname(input_path),
              "/tuning_job_list.txt --mem-per-cpu ", cpu_mem, "g -t ",
              runtime, " --cpus-per-task ", cpu_num, " --partition ", partition))
-  cat("\n\nThen, sbatch the resulting shell script to run the job array.")
+  cat("\n\nThen, sbatch the resulting shell script to run the job array.\n")
 
 }
 
