@@ -11,16 +11,19 @@
 #' Get embeddings of texts
 #'
 #' @param input_list This should be an output of prep_data().
+#' @param save Logical, should input embeddings be saved in default location
+#' instead of being returned.
 #'
 #' @return List, which is `input_list` now including the text embeddings, with
-#' the embedding dimension recorded in `input_list$params$embed_dim`.
+#' the embedding dimension recorded in `input_list$params$embed_dim` if
+#' save = TRUE, otherwise no return.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' res <- embed(imdb_input_list)
 #' }
-embed <- function(input_list) {
+embed <- function(input_list, save = TRUE) {
 
   if (input_list$embed_method != "file") {
     if (input_list$embed_method == "default") {
@@ -48,5 +51,12 @@ embed <- function(input_list) {
   }
 
   input_list$embeds <- embeds
-  return(input_list)
+
+  if (save) {
+    saveRDS(input_embeds,
+            paste0(file.path(folder_path, folder_name), "/input_embeds.rds"))
+  } else {
+    return(input_list)
+  }
+
 }
