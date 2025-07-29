@@ -8,6 +8,55 @@
 ###############################################################################
 
 
+#' Prepare shell script for parameter tuning cluster job array
+#'
+#' @param grid_len Number of rows in the tuning grid
+#' @param job_iters Number of grid rows to give to each individual job
+#' @param input_path Path for saved
+#' @param conda_env Cluster conda environment where packages are installed
+#' @param cpu_mem Memory per CPU node to request
+#' @param runtime Duration of each job
+#' @param cpu_num Number of CPUs to request for each job
+#' @param partition Name of cluster partition to use
+#'
+#' @return
+#' @export
+#'
+#' @examples
+prep_cluster_tune <- function(grid_len, job_iters, input_path, conda_env,
+                              cpu_mem, runtime, cpu_num, partition) {
+
+  # Find run script in ConTextNet package for cluster tuning.
+  run_script <- system.file("scripts/run_cluster_tune.R",
+                            package = "ConTextNet")
+
+  # Assemble job list and save to same directory that inputs live in.
+  if (job_iters != "all") {
+    base_str <- paste0("module load miniconda; conda activate ", conda_env,
+                       "; Rscript --vanilla ", run_script, " \"", input_path,
+                       "\"")
+    n_jobs <- ceiling(grid_len / job_iters)
+    job_list <- ""
+    for (i in 1:n_jobs) {
+      this <- paste0(base_str, " ", (i - 1)*job_iters + 1, " ", job_iters, "\n")
+      job_list <- paste0(job_list, this)
+    }
+    # cat(job_list)
+  }
+  write(job_list, paste0(dirname(input_path), "/tuning_job_list.txt"))
+
+  # To create dSQ sh file using this job list, run the next line in the terminal
+  # (editing memory/time/cores as needed):
+  cat("To create a dSQ shell file using the saved job list and input resource parameters, run the following line in the cluster terminal:\n")
+  cat(paste0("\n   dsq --job-file ", dirname(input_path),
+             "/tuning_job_list.txt --mem-per-cpu ", cpu_mem, "g -t ",
+             runtime, " --cpus-per-task ", cpu_num, " --partition ", partition))
+  cat("\n\nThen, sbatch the resulting shell script to run the job array.")
+
+}
+
+
+
 #' Get Parameter List from Grid Row
 #'
 #' @param grid_row Grid row of parameter settings to evaluate

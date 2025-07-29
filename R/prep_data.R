@@ -224,6 +224,10 @@ create_grid <- function(model_params, K, task) {
 #' @param scale_cov Instructions for scaling covariates. Default is "normalize".
 #'        To scale, set to either "normalize" or "min-max". To avoid scaling,
 #'        set to "none."
+#' @param grid Parameter tuning grid from `create_grid()`, to be recorded as
+#'        a meta-parameter for reference/reproducibility.
+#' @param compute_params Parameters for running tuning on a cluster, to be
+#'        recorded as a meta-parameter.
 #'
 #' @return
 #' @export
@@ -259,7 +263,8 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                       scale_cov = "normalize", embed_method = "default",
                       embed_instr = list("max_length" = 200),
                       tune_method = "none", folder_name, folder_path = "",
-                      folds = NULL, override_dir = FALSE) {
+                      folds = NULL, override_dir = FALSE, grid = NULL,
+                      compute_params = NULL) {
 
   if (!task %in% c("class", "reg")) {
     stop("Please set `task` to either `class` or `reg`.")
@@ -306,6 +311,9 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
   params$n_tokens <- embed_instr$max_length
   params$folder <- folder_name
   params$task <- task
+  params$folds <- folds
+  params$grid <- grid
+  params$compute_params <- compute_params
 
 
   ### QA covariates (if included) and potentially scale them. The `scale_covars`

@@ -19,7 +19,9 @@ prep_data(
   folder_name,
   folder_path = "",
   folds = NULL,
-  override_dir = FALSE
+  override_dir = FALSE,
+  grid = NULL,
+  compute_params = NULL
 )
 }
 \arguments{
@@ -73,6 +75,12 @@ must set to an integer if tune_method != "none").}
 
 \item{override_dir}{Create a new directory at the given path if it doesn't
 exist, without interactive confirmation.}
+
+\item{grid}{Parameter tuning grid from \code{create_grid()}, to be recorded as
+a meta-parameter for reference/reproducibility.}
+
+\item{compute_params}{Parameters for running tuning on a cluster, to be
+recorded as a meta-parameter.}
 }
 \description{
 Prepare data for ConTextNet model
