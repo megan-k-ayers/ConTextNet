@@ -148,6 +148,7 @@ prep_params <- function(p, tune_method) {
 #'
 #' @return A tibble, where each row represents a different setting for model
 #'         parameters.
+#' @export
 #'
 #' @examples
 create_grid <- function(model_params, K, task) {
