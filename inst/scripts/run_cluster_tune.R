@@ -12,7 +12,7 @@ args$end_row <- args$start_row + args$batch_size - 1
 # Read in and unpack saved inputs.
 input_embeds <- readRDS(args$input_file)
 dat <- input_embeds$dat; embeds <- input_embeds$embeds
-meta_params <- input_embeds$params; grid <- input_embeds$grid;
+meta_params <- input_embeds$params; grid <- input_embeds$params$grid;
 tokens <- input_embeds$tokens; vocab <- input_embeds$vocab
 rm(list = "input_embeds"); gc()
 
