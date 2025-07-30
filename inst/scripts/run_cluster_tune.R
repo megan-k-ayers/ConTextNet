@@ -19,5 +19,6 @@ rm(list = "input_embeds"); gc()
 # Run tuning for this portion of the grid and save results.
 tune_res <- tune_model(dat, embeds, meta_params,
                        grid[args$start_row:args$end_row, ], tokens, vocab)
-saveRDS(tune_res, paste0(meta_params$folder, "/tuning_results_", args$start_row,
+saveRDS(tune_res, paste0("processed_data/", meta_params$folder,
+                         "/tuning_results_", args$start_row,
                          "_", args$end_row, ".rds"))
