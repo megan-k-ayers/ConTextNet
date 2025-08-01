@@ -16,6 +16,8 @@ meta_params <- input_embeds$params; grid <- input_embeds$params$grid;
 tokens <- input_embeds$tokens; vocab <- input_embeds$vocab
 rm(list = "input_embeds"); gc()
 
+if (nrow(grid) < args$end_row) args$end_row <- nrow(grid)
+
 # Run tuning for this portion of the grid and save results.
 tune_res <- tune_model(dat, embeds, meta_params,
                        grid[args$start_row:args$end_row, ], tokens, vocab)
