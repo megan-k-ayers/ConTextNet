@@ -71,7 +71,10 @@ get_top_phrases <- function(phrase_acts, tokens, params, vocab, m = 10) {
       these$text <- sapply(1:nrow(these), function(i){
         get_phrase(tokens[these$sample_id[i], ], these$phrase_id[i],
                    these$k[i], vocab)})
-      these <- these[!duplicated(these$text), ][1:min(m, nrow(these)), ]
+      these <- these[!duplicated(these$text), ]
+      if (nrow(these) > m) {
+        these <- these[1:m, ]
+      }
       res <- rbind(res, these)
     }
     return(res)
