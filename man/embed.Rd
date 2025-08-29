@@ -4,14 +4,18 @@
 \alias{embed}
 \title{Get embeddings of texts}
 \usage{
-embed(input_list)
+embed(input_list, save = TRUE)
 }
 \arguments{
 \item{input_list}{This should be an output of prep_data().}
+
+\item{save}{Logical, should input embeddings be saved in default location
+instead of being returned.}
 }
 \value{
 List, which is \code{input_list} now including the text embeddings, with
-the embedding dimension recorded in \code{input_list$params$embed_dim}.
+the embedding dimension recorded in \code{input_list$params$embed_dim} if
+save = TRUE, otherwise no return.
 }
 \description{
 Get embeddings of texts

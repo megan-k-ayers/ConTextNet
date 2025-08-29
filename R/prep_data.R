@@ -276,6 +276,8 @@ prep_cluster_tune <- function(grid_len, job_iters, input_path, conda_env,
 #'        a meta-parameter for reference/reproducibility.
 #' @param compute_params Parameters for running tuning on a cluster, to be
 #'        recorded as a meta-parameter.
+#' @param fold_group Column name that train/test folds be grouped by, or
+#'        NULL for regular random fold assignment.
 #'
 #' @return
 #' @export
@@ -312,7 +314,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
                       embed_instr = list("max_length" = 200),
                       tune_method = "none", folder_name, folder_path = "",
                       folds = NULL, override_dir = FALSE, grid = NULL,
-                      compute_params = NULL) {
+                      compute_params = NULL, fold_group = NULL) {
 
   if (!task %in% c("class", "reg")) {
     stop("Please set `task` to either `class` or `reg`.")
@@ -349,8 +351,14 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
 
 
   ### Train/test split
-  x$fold <- sample(c("train", "test"), nrow(x), replace = TRUE,
-                   prob = c(1 - test_prop, test_prop))
+  if (!is.null(fold_group)) {
+    test_inds <- sample(1:nrow(x), round(nrow(x) * test_prop))
+    x$fold <- ifelse(1:nrow(x) %in% test_inds, "test", "train")
+  } else {
+    groups <- unique(x[, fold_group])
+    test_groups <- sample(groups, round(length(groups) * test_prop))
+    x$fold <- ifelse(x[, fold_group] %in% test_groups, "test", "train")
+  }
 
 
   ### Prep formatting of meta-params (which will include model params if only a
@@ -393,8 +401,16 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
     # Define folds within the training set for tuning cross-validation
     inds <- which(x$fold == "train")
     x$tune_fold <- NA
-    x$tune_fold[inds] <- sample(cut(seq(1, length(inds)), breaks = folds,
-                                    labels = FALSE))
+    if (!is.null(fold_group)) {
+      x$tune_fold[inds] <- sample(cut(seq(1, length(inds)), breaks = folds,
+                                      labels = FALSE))
+    } else {
+      train_groups <- unique(x[inds, fold_group])
+      group_folds <- sample(cut(seq(1, length(train_groups)), breaks = folds,
+                                labels = FALSE))
+      x$tune_fold[inds] <- setNames(group_folds, train_groups)[x[inds,
+                                                                 fold_group]]
+    }
   }
 
 

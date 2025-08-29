@@ -21,7 +21,8 @@ prep_data(
   folds = NULL,
   override_dir = FALSE,
   grid = NULL,
-  compute_params = NULL
+  compute_params = NULL,
+  fold_group = NULL
 )
 }
 \arguments{
@@ -60,9 +61,9 @@ max number of tokens to consider per text sample (named "name" and
 The "default" method: the max number of tokens to consider per text
 sample (named "max_length")}
 
-\item{tune_method}{How tuning should be performed: locally, via a Cluster
-with Slurm, generically via a shell script, or not at all
-("local", "slurm", "shell", or "none")}
+\item{tune_method}{How tuning should be performed: locally, via a cluster job
+array, or not at all
+("local", "cluster", or "none")}
 
 \item{folder_name}{Name of directory to create for saving model files. If
 NULL, no directory will be created.}
@@ -81,6 +82,9 @@ a meta-parameter for reference/reproducibility.}
 
 \item{compute_params}{Parameters for running tuning on a cluster, to be
 recorded as a meta-parameter.}
+
+\item{fold_group}{Column name that train/test folds be grouped by, or
+NULL for regular random fold assignment.}
 }
 \description{
 Prepare data for ConTextNet model
