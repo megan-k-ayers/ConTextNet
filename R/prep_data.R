@@ -351,7 +351,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
 
 
   ### Train/test split
-  if (!is.null(fold_group)) {
+  if (is.null(fold_group)) {
     test_inds <- sample(1:nrow(x), round(nrow(x) * test_prop))
     x$fold <- ifelse(1:nrow(x) %in% test_inds, "test", "train")
   } else {
@@ -401,7 +401,7 @@ prep_data <- function(x, y_name, text_name,  model_params, task,
     # Define folds within the training set for tuning cross-validation
     inds <- which(x$fold == "train")
     x$tune_fold <- NA
-    if (!is.null(fold_group)) {
+    if (is.null(fold_group)) {
       x$tune_fold[inds] <- sample(cut(seq(1, length(inds)), breaks = folds,
                                       labels = FALSE))
     } else {
