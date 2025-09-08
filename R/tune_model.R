@@ -114,6 +114,78 @@ get_tune_metrics <- function(model, embeds, dat, metrics, fold, covars = NULL) {
 }
 
 
+#' Combine job array tuning results.
+#'
+#' @param folder_name Name of directory where model files are saved.
+#' @param folder_path Path to parent directory where folder_name should be
+#'        stored.
+#' @param grid Parameter tuning grid.
+#'
+#' @return No return object, but compiled tuning results will be saved if the
+#'         job array was successful.
+#' @export
+#'
+#' @examples
+combine_tune_res <- function(folder_path, folder_name, grid) {
+
+  ### Stitch together job array results
+  files <- list.files(paste0(file.path(folder_path, folder_name)),
+                      full.names = TRUE)
+  files <- files[grep("tuning_results_", files)]
+
+  x <- readRDS(files[1])
+  for (f in files[2:length(files)]) x <- rbind(x, readRDS(f))
+
+  # Check to see if any rows of the original parameter grid are missing from
+  # running out of memory/time
+  grid$job <- rep(1:ceiling(nrow(grid) /
+                              input_embeds$params$compute_params$job_iters),
+                  each = 40)[1:nrow(grid)]
+  temp <- merge(grid[, c("job", "id", "run", "n_filts", "kern_sizes")],
+                x[, c("id", "run", "train_mse")], all.x = TRUE)
+
+  # Save tuning results if all jobs finished
+  missing_jobs <- unique(temp$job[is.na(temp$train_mse)])
+  if (identical(missing_jobs, integer(0))) {
+    saveRDS(x, paste0(file.path(folder_path, folder_name),
+                      "/tuning_results.rds"))
+  } else {
+    stop(paste0("Missing results from jobs: ",
+                paste(missing_jobs, collapse = ", "), "."))
+  }
+}
+
+
+#' Aggregate tuning results across folds
+#'
+#' @param tune_res Parameter grid with tuning results included.
+#'
+#' @return Aggregated version of tune_res, a data frame.
+#' @export
+#'
+#' @examples
+agg_tuning_res <- function(tune_res) {
+
+  # Take the average activation range across both filters and runs of the same
+  # parameter setting.
+  tune_res$act_range_avg <- apply(do.call(rbind,
+                                          strsplit(tune_res$act_range, "|",
+                                                   fixed = TRUE)),
+                                  1, function(a) mean(as.numeric(a)))
+
+  # Average the other quantitative columns across runs of the same setting.
+  quant_cols <- grep("train|val|max_corr|avg", names(tune_res), value = TRUE)
+  tune_res_agg <- tune_res %>%
+    group_by(id) %>%
+    summarise(across(all_of(quant_cols), ~ mean(.x, na.rm = TRUE)),
+              id = unique(id))
+
+  tune_res_agg <- tune_res_agg[order(tune_res_agg$val_mse), ]
+  return(tune_res_agg)
+
+}
+
+
 #' Tune ConTextNet Model
 #'
 #' @param dat Original text data set with outcome `y` (assumes full, will auto
